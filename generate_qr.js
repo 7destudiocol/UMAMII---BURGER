@@ -59,8 +59,8 @@ async function createQRWithLogo(url, logoPath, outputPath) {
 
 // Variables base
 const siteUrl = 'https://umamii-burguer.vercel.app/';
-const logoToUse = './assets/img/Logo (2).jpeg';
-const finalQrOutput = './assets/img/qr-umamii-logo.png';
+const logoToUse = './assets/img/Logo (2).webp';
+const finalQrOutput = './assets/img/qr-umamii-logo.webp';
 
 // Ejecutar script
 createQRWithLogo(siteUrl, logoToUse, finalQrOutput);
