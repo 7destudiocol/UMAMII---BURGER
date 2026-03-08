@@ -791,7 +791,8 @@ body {
 }
 
 .cart-icon:hover {
-    transform: scale(1.1) rotate(-5deg);
+    transform: scale(1.15) rotate(-5deg);
+    box-shadow: 0 8px 25px rgba(255, 183, 3, 0.6);
 }
 
 #cart-count {
@@ -828,6 +829,14 @@ body {
 
 .cart-sidebar.active {
     right: 0;
+}
+
+/* Responsive sidebar width for tablets/small laptops */
+@media (min-width: 481px) and (max-width: 1024px) {
+    .cart-sidebar {
+        width: 320px;
+        right: -320px;
+    }
 }
 
 .cart-overlay {
@@ -871,14 +880,17 @@ body {
 }
 
 .close-cart {
-    font-size: 2rem;
+    font-size: 2.2rem;
     cursor: pointer;
     color: var(--text-secondary);
-    transition: color 0.3s;
+    transition: color 0.3s, transform 0.3s;
+    padding: 10px;
+    margin: -10px;
 }
 
 .close-cart:hover {
     color: var(--primary-color);
+    transform: rotate(90deg);
 }
 
 .cart-items {

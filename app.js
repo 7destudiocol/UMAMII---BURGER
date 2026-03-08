@@ -110,6 +110,10 @@ cartIcon.addEventListener('click', openCart);
 closeCartBtn.addEventListener('click', closeCart);
 
 function openCart() {
+    // Calcular ancho de scrollbar para evitar salto de layout
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    
     cartSidebar.classList.add('active');
     cartOverlay.classList.add('active');
     document.body.style.overflow = 'hidden'; // Evitar scroll al ver el carrito
@@ -118,8 +122,22 @@ function openCart() {
 function closeCart() {
     cartSidebar.classList.remove('active');
     cartOverlay.classList.remove('active');
-    document.body.style.overflow = '';
+    
+    // Restaurar scroll y padding después de la animación
+    setTimeout(() => {
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 400);
 }
+
+// Cerrar con tecla ESC
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeCart();
+        modal.style.display = "none";
+        clearEmbers();
+    }
+});
 
 // Initialize Application
 function initApp() {
