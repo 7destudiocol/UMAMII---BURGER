@@ -67,6 +67,11 @@
             </a>
         </div>
         <h1 class="main-title">NUESTRO <span class="highlight">MENÚ</span></h1>
+        <!-- Shopping Cart Icon -->
+        <div id="cart-icon" class="cart-icon">
+            <i class="fas fa-shopping-cart"></i>
+            <span id="cart-count">0</span>
+        </div>
     </header>
 
     <nav class="category-nav">
@@ -82,6 +87,27 @@
             <!-- Cards de productos -->
         </section>
     </main>
+
+    <!-- Shopping Cart Sidebar -->
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h2><i class="fas fa-shopping-basket"></i> TU PEDIDO</h2>
+            <span class="close-cart">&times;</span>
+        </div>
+        <div id="cart-items" class="cart-items">
+            <!-- Items del carrito -->
+            <p class="empty-cart-msg">Tu carrito está vacío</p>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>TOTAL:</span>
+                <span id="cart-total-price">$0</span>
+            </div>
+            <button id="whatsapp-order-btn" class="whatsapp-btn">
+                <i class="fab fa-whatsapp"></i> PEDIR POR WHATSAPP
+            </button>
+        </div>
+    </div>
 
     <footer class="footer">
         <div class="contact-info">

@@ -75,8 +75,18 @@ const captionText = document.getElementById('modal-caption');
 const closeModalBtn = document.getElementsByClassName('close-modal')[0];
 const embersContainer = document.getElementById('embers-container');
 
+// Cart Elements
+const cartIcon = document.getElementById('cart-icon');
+const cartCount = document.getElementById('cart-count');
+const cartSidebar = document.getElementById('cart-sidebar');
+const closeCartBtn = document.querySelector('.close-cart');
+const cartItemsContainer = document.getElementById('cart-items');
+const cartTotalPrice = document.getElementById('cart-total-price');
+const whatsappBtn = document.getElementById('whatsapp-order-btn');
+
 // State
 let currentCategory = 'hamburguesas';
+let cart = JSON.parse(localStorage.getItem('umami_cart')) || [];
 
 // UI Interactivity - Modal
 closeModalBtn.onclick = function() {
@@ -91,10 +101,20 @@ window.onclick = function(event) {
     }
 }
 
+// UI Interactivity - Cart
+cartIcon.addEventListener('click', () => {
+    cartSidebar.classList.add('active');
+});
+
+closeCartBtn.addEventListener('click', () => {
+    cartSidebar.classList.remove('active');
+});
+
 // Initialize Application
 function initApp() {
     renderCategories();
     renderProducts(currentCategory);
+    updateCartUI();
     
     // Simular un tiempo de carga para mostrar el loader de hamburguesa
     setTimeout(() => {
@@ -134,8 +154,6 @@ function renderCategories() {
 
 // Formatter for currency (COP)
 const formatColPesos = (price) => {
-    // Si ya viene formateado en el JSON (ej. "$18.000") lo devolvemos,
-    // si es un número, lo formateamos.
     if (typeof price === 'string') return price;
     return `$${new Intl.NumberFormat('es-CO').format(price)}`;
 }
@@ -144,7 +162,6 @@ const formatColPesos = (price) => {
 function renderProducts(categoryId) {
     menuGrid.innerHTML = '';
     
-    // Filter products
     const filteredProducts = menuData.products.filter(p => p.category === categoryId);
     
     if (filteredProducts.length === 0) {
@@ -152,22 +169,18 @@ function renderProducts(categoryId) {
         return;
     }
     
-    // Render
     filteredProducts.forEach((product, index) => {
         const card = document.createElement('article');
         card.className = 'product-card animate-fade-in';
         card.style.animationDelay = `${index * 0.1}s`;
         
-        // Manejar imágenes si no existen
         const imgSrc = product.image ? `assets/img/${product.image}` : `assets/img/Logo (2).webp`;
-        // Clases utilitarias dependiendo de si es logo o foto de producto real para ajustar el padding
         const imgClass = product.image ? 'product-image' : 'product-image placeholder-img';
         
-        // Escapar comillas dobles o comillas simples si las hubiera en el texto para el onclick
         const safeName = product.name.replace(/'/g, "\\'");
         const safeDesc = product.description ? product.description.replace(/'/g, "\\'") : '';
-
         const safePrice = formatColPesos(product.price);
+
         card.innerHTML = `
             <div class="product-image-container" onclick="openModal('${imgSrc}', '${safeName}', '${safeDesc}', '${safePrice}', ${product.spicy || false})">
                 <img src="${imgSrc}" alt="${product.name}" class="${imgClass}" loading="lazy">
@@ -178,6 +191,9 @@ function renderProducts(categoryId) {
                     <span class="product-price">${safePrice}</span>
                 </div>
                 ${product.description ? `<p class="product-desc">${product.description}</p>` : ''}
+                <button class="add-to-cart-btn" onclick="addToCart('${safeName}')">
+                    <i class="fas fa-plus"></i> AGREGAR AL CARRITO
+                </button>
             </div>
         `;
         
@@ -185,12 +201,129 @@ function renderProducts(categoryId) {
     });
 }
 
+// Shopping Cart Functions
+function addToCart(productName) {
+    const product = menuData.products.find(p => p.name === productName);
+    if (!product) return;
+
+    const existingItem = cart.find(item => item.name === productName);
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            quantity: 1
+        });
+    }
+
+    saveCart();
+    updateCartUI();
+    
+    // Visual feedback (shaking the cart icon)
+    cartIcon.style.animation = 'none';
+    setTimeout(() => {
+        cartIcon.style.animation = 'bounce 0.5s ease';
+    }, 10);
+}
+
+function removeFromCart(productName) {
+    const itemIndex = cart.findIndex(item => item.name === productName);
+    if (itemIndex > -1) {
+        if (cart[itemIndex].quantity > 1) {
+            cart[itemIndex].quantity -= 1;
+        } else {
+            cart.splice(itemIndex, 1);
+        }
+    }
+    saveCart();
+    updateCartUI();
+}
+
+function deleteFromCart(productName) {
+    cart = cart.filter(item => item.name !== productName);
+    saveCart();
+    updateCartUI();
+}
+
+function saveCart() {
+    localStorage.setItem('umami_cart', JSON.stringify(cart));
+}
+
+function updateCartUI() {
+    // Total items count
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    cartCount.textContent = totalItems;
+    
+    // Clear display
+    cartItemsContainer.innerHTML = '';
+    
+    if (cart.length === 0) {
+        cartItemsContainer.innerHTML = '<p class="empty-cart-msg">Tu carrito está vacío</p>';
+        cartTotalPrice.textContent = '$0';
+        return;
+    }
+    
+    let total = 0;
+    
+    cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        
+        const imgSrc = item.image ? `assets/img/${item.image}` : `assets/img/Logo (2).webp`;
+        
+        const itemEl = document.createElement('div');
+        itemEl.className = 'cart-item';
+        itemEl.innerHTML = `
+            <img src="${imgSrc}" alt="${item.name}" class="cart-item-img">
+            <div class="cart-item-details">
+                <h4 class="cart-item-name">${item.name}</h4>
+                <div class="cart-item-price">${formatColPesos(item.price)}</div>
+                <div class="cart-item-controls">
+                    <button onclick="removeFromCart('${item.name.replace(/'/g, "\\'")}')"><i class="fas fa-minus"></i></button>
+                    <span>${item.quantity}</span>
+                    <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}')"><i class="fas fa-plus"></i></button>
+                    <button style="margin-left: auto; color: #ff0000; border-color: rgba(255,0,0,0.3);" onclick="deleteFromCart('${item.name.replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+        cartItemsContainer.appendChild(itemEl);
+    });
+    
+    cartTotalPrice.textContent = formatColPesos(total);
+}
+
+// WhatsApp Integration
+whatsappBtn.addEventListener('click', () => {
+    if (cart.length === 0) {
+        alert("¡Tu carrito está vacío! Agrega algo delicioso antes de pedir.");
+        return;
+    }
+    
+    let message = "¡Hola UMAMI! 🍔 Venía del menú virtual y quiero hacer este pedido:\n\n";
+    let total = 0;
+    
+    cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        message += `• *${item.quantity}x* ${item.name} - ${formatColPesos(itemTotal)}\n`;
+    });
+    
+    message += `\n*TOTAL: ${formatColPesos(total)}*`;
+    message += "\n\n¿Me confirman para pasarles mis datos de entrega? ¡Gracias! ✨";
+    
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/573233519428?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
+});
+
 function openModal(imgSrc, name, desc, price, isSpicy) {
     modal.style.display = "block";
     modalImg.src = imgSrc;
     captionText.innerHTML = isSpicy ? `${name} 🌶️` : name;
     
-    // Aplicar efecto de fuego si es picante
     if (isSpicy) {
         modal.classList.add('spicy-fire');
         generateEmbers();
@@ -199,34 +332,26 @@ function openModal(imgSrc, name, desc, price, isSpicy) {
         clearEmbers();
     }
     
-    // Asignar precio
     const priceElement = document.getElementById('modal-price');
     if (priceElement) {
-        if (price) {
-            priceElement.innerHTML = price;
-            priceElement.style.display = "block";
-        } else {
-            priceElement.style.display = "none";
-        }
+        priceElement.innerHTML = price || "";
+        priceElement.style.display = price ? "block" : "none";
     }
     
-    // Asignar descripción dividida en viñetas
     const descElement = document.getElementById('modal-desc');
-    descElement.innerHTML = ""; // Limpiar viñetas anteriores
+    descElement.innerHTML = "";
     
     if(desc) {
-        // Separamos por coma y también por " y " para obtener los ingredientes
         const ingredients = desc.split(/,\s*|\s+y\s+/i)
                                 .map(i => i.trim().replace(/\.$/, ''))
                                 .filter(i => i.length > 0);
         
         ingredients.forEach((ing, index) => {
             const li = document.createElement('li');
-            li.textContent = ing.charAt(0).toUpperCase() + ing.slice(1); // Capitalizar la primera letra
-            li.style.animationDelay = `${index * 0.15}s`; // Retardo escalonado para mostrarlos uno a uno
+            li.textContent = ing.charAt(0).toUpperCase() + ing.slice(1);
+            li.style.animationDelay = `${index * 0.15}s`;
             descElement.appendChild(li);
         });
-        
         descElement.style.display = "flex";
     } else {
         descElement.style.display = "none";
