@@ -164,14 +164,15 @@ function renderProducts(categoryId) {
         const safeName = product.name.replace(/'/g, "\\'");
         const safeDesc = product.description ? product.description.replace(/'/g, "\\'") : '';
 
+        const safePrice = formatColPesos(product.price);
         card.innerHTML = `
-            <div class="product-image-container" onclick="openModal('${imgSrc}', '${safeName}', '${safeDesc}')">
+            <div class="product-image-container" onclick="openModal('${imgSrc}', '${safeName}', '${safeDesc}', '${safePrice}')">
                 <img src="${imgSrc}" alt="${product.name}" class="${imgClass}" loading="lazy">
             </div>
             <div class="product-info">
                 <div class="product-header">
                     <h3 class="product-title">${product.name}</h3>
-                    <span class="product-price">${formatColPesos(product.price)}</span>
+                    <span class="product-price">${safePrice}</span>
                 </div>
                 ${product.description ? `<p class="product-desc">${product.description}</p>` : ''}
             </div>
@@ -181,18 +182,41 @@ function renderProducts(categoryId) {
     });
 }
 
-function openModal(imgSrc, name, desc) {
+function openModal(imgSrc, name, desc, price) {
     modal.style.display = "block";
     modalImg.src = imgSrc;
     captionText.innerHTML = name;
     
-    // Asignar descripción o vaciarla si no tiene
+    // Asignar precio
+    const priceElement = document.getElementById('modal-price');
+    if (priceElement) {
+        if (price) {
+            priceElement.innerHTML = price;
+            priceElement.style.display = "block";
+        } else {
+            priceElement.style.display = "none";
+        }
+    }
+    
+    // Asignar descripción dividida en viñetas
     const descElement = document.getElementById('modal-desc');
+    descElement.innerHTML = ""; // Limpiar viñetas anteriores
+    
     if(desc) {
-        descElement.innerHTML = desc;
-        descElement.style.display = "block";
+        // Separamos por coma y también por " y " para obtener los ingredientes
+        const ingredients = desc.split(/,\s*|\s+y\s+/i)
+                                .map(i => i.trim().replace(/\.$/, ''))
+                                .filter(i => i.length > 0);
+        
+        ingredients.forEach((ing, index) => {
+            const li = document.createElement('li');
+            li.textContent = ing.charAt(0).toUpperCase() + ing.slice(1); // Capitalizar la primera letra
+            li.style.animationDelay = `${index * 0.15}s`; // Retardo escalonado para mostrarlos uno a uno
+            descElement.appendChild(li);
+        });
+        
+        descElement.style.display = "flex";
     } else {
-        descElement.innerHTML = "";
         descElement.style.display = "none";
     }
 }
