@@ -44,7 +44,7 @@ body {
     /* Nuevo Background estilo Umami Premium */
     background-image: 
         linear-gradient(rgba(13, 13, 13, 0.7), rgba(13, 13, 13, 0.95)),
-        url('assets/img/umami_burger_wallpaper_v2_1772940068105.png');
+        url('assets/img/umami_burger_wallpaper_v2_1772940068105.webp');
     background-attachment: fixed;
     background-size: cover;
     background-position: center;
@@ -88,7 +88,7 @@ body {
 
 .highlight {
     color: var(--primary-color);
-    background: url('assets/img/brush-stroke.png'); /* Placeholder si queremos usar svg brush */
+    background: url('assets/img/brush-stroke.webp'); /* Placeholder si queremos usar svg brush */
     display: inline-block;
     padding: 0 10px;
 }

@@ -14,23 +14,23 @@ const menuData = {
     ],
     products: [
         // HAMBURGUESAS
-        { category: "hamburguesas", name: "TRADII", price: 18000, description: "Pan brioche, salsa de la casa, BBQ, Vegetales frescos, Carne de res, Cebolla caramelizada, Doble queso y Tocineta.", image: "HAMBURGUESA TRADI.png" },
-        { category: "hamburguesas", name: "ALOHA", price: 20000, description: "Pan brioche, Salsa de la casa, BBQ, Vegetales frescos, Carne de res, Mermelada de Piña-Tocineta, Doble queso.", image: "HAMBURGUESA ALOHA.png" },
+        { category: "hamburguesas", name: "TRADII", price: 18000, description: "Pan brioche, salsa de la casa, BBQ, Vegetales frescos, Carne de res, Cebolla caramelizada, Doble queso y Tocineta.", image: "HAMBURGUESA TRADI.webp" },
+        { category: "hamburguesas", name: "ALOHA", price: 20000, description: "Pan brioche, Salsa de la casa, BBQ, Vegetales frescos, Carne de res, Mermelada de Piña-Tocineta, Doble queso.", image: "HAMBURGUESA ALOHA.webp" },
         { category: "hamburguesas", name: "DOBLE", price: 22000, description: "Pan brioche, salsa de la casa, BBQ, vegetales frescos, doble carne, cebolla caramelizada, Doble queso y Tocineta." },
-        { category: "hamburguesas", name: "CHEESE BLEND", price: 20000, description: "Pan brioche, Salsa de la casa, vegetales frescos, Carne de res, cebolla caramelizada, doble queso tipo cheddar, queso blanco y Tocineta.", image: "HAMBURGUESA CHESSE BLEND.png" },
-        { category: "hamburguesas", name: "GAUCHA", price: 21000, description: "Pan brioche, Salsa de la casa, Vegetales frescos, Carne de res, doble queso, chimichurri, chorizo y pimientos asados.", image: "HAMBURGUESA GAUCHA.png" },
-        { category: "hamburguesas", name: "PULLED KING", price: 26000, description: "Pan brioche, salsa BBQ de la casa, Vegetales frescos, Carne de res, pulled pork, aros de cebolla. (Basado en la imagen suelta).", image: "HAMBURGUESA PULLED KING.png" }, // Asumiendo este nombre basado en la foto y estructura
-        { category: "hamburguesas", name: "TRIFASICA", price: 28000, description: "Pan brioche, Salsa de la casa, Carne de res, pechuga de pollo, lomo de cerdo, vegetales frescos, queso, tocineta. (Basado en la imagen suelta).", image: "HAMBURGUESA TRIFASICA.png" }, // Asumiendo este nombre basado en la foto y estructura
+        { category: "hamburguesas", name: "CHEESE BLEND", price: 20000, description: "Pan brioche, Salsa de la casa, vegetales frescos, Carne de res, cebolla caramelizada, doble queso tipo cheddar, queso blanco y Tocineta.", image: "HAMBURGUESA CHESSE BLEND.webp" },
+        { category: "hamburguesas", name: "GAUCHA", price: 21000, description: "Pan brioche, Salsa de la casa, Vegetales frescos, Carne de res, doble queso, chimichurri, chorizo y pimientos asados.", image: "HAMBURGUESA GAUCHA.webp" },
+        { category: "hamburguesas", name: "PULLED KING", price: 26000, description: "Pan brioche, salsa BBQ de la casa, Vegetales frescos, Carne de res, pulled pork, aros de cebolla. (Basado en la imagen suelta).", image: "HAMBURGUESA PULLED KING.webp" }, // Asumiendo este nombre basado en la foto y estructura
+        { category: "hamburguesas", name: "TRIFASICA", price: 28000, description: "Pan brioche, Salsa de la casa, Carne de res, pechuga de pollo, lomo de cerdo, vegetales frescos, queso, tocineta. (Basado en la imagen suelta).", image: "HAMBURGUESA TRIFASICA.webp" }, // Asumiendo este nombre basado en la foto y estructura
         
         // PERROS
         { category: "perros", name: "TRADII", price: 14000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso y tocineta." },
-        { category: "perros", name: "CHIKEN", price: 20000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso, tocineta, pollo desmechado en salsa.", image: "PERRO CHIKEN.png" },
+        { category: "perros", name: "CHIKEN", price: 20000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso, tocineta, pollo desmechado en salsa.", image: "PERRO CHIKEN.webp" },
         { category: "perros", name: "CRIOLLO", price: 21000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso, tocineta, maicitos, chorizo, ahogado y carne mechada en salsa." },
         { category: "perros", name: "CHIKEN (ALOHA O CHAMPI)", price: 21000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso, tocineta, pollo desmechado en salsa, mermelada de piña o champiñones." },
-        { category: "perros", name: "ORALE", price: 21000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso tipo chédar, tocineta, carne de res con jalapeños y maicitos.", image: "PERRO ORALE.png" },
+        { category: "perros", name: "ORALE", price: 21000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso tipo chédar, tocineta, carne de res con jalapeños y maicitos.", image: "PERRO ORALE.webp" },
 
         // SANDWICHES
-        { category: "sandwiches", name: "PULLED PORK", price: 20000, description: "Pan brioche, doble jamón, coleslaw, pulled pork en salsa de la casa, doble queso y cebollitas encurtidas.", image: "SANDWISH - PULLED PORK.png" },
+        { category: "sandwiches", name: "PULLED PORK", price: 20000, description: "Pan brioche, doble jamón, coleslaw, pulled pork en salsa de la casa, doble queso y cebollitas encurtidas.", image: "SANDWISH - PULLED PORK.webp" },
         { category: "sandwiches", name: "CHIKEN", price: 20000, description: "Pan brioche, doble jamón, doble queso, pollo desmechado en salsa, vegetales frescos y chimichurri." },
         { category: "sandwiches", name: "CRIOLLO", price: 22000, description: "Pan brioche, doble jamón, doble queso, vegetales frescos, carne mechada, chorizo, maicitos y ahogado." },
         { category: "sandwiches", name: "CHAMPI ( ALOHA O CHIKEN )", price: 21000, description: "Pan brioche, pollo en salsa bechamel con champiñones o mermelada de piña, doble jamón, doble queso y vegetales frescos." },
@@ -156,7 +156,7 @@ function renderProducts(categoryId) {
         card.style.animationDelay = `${index * 0.1}s`;
         
         // Manejar imágenes si no existen
-        const imgSrc = product.image ? `assets/img/${product.image}` : `assets/img/Logo (2).jpeg`;
+        const imgSrc = product.image ? `assets/img/${product.image}` : `assets/img/Logo (2).webp`;
         // Clases utilitarias dependiendo de si es logo o foto de producto real para ajustar el padding
         const imgClass = product.image ? 'product-image' : 'product-image placeholder-img';
         
