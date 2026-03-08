@@ -829,6 +829,25 @@ body {
     right: 0;
 }
 
+.cart-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 10002; /* Entre el modal/loader y el sidebar */
+    display: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+
+.cart-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
 @media (max-width: 480px) {
     .cart-sidebar {
         width: 100%;

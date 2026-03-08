@@ -79,6 +79,7 @@ const embersContainer = document.getElementById('embers-container');
 const cartIcon = document.getElementById('cart-icon');
 const cartCount = document.getElementById('cart-count');
 const cartSidebar = document.getElementById('cart-sidebar');
+const cartOverlay = document.getElementById('cart-overlay');
 const closeCartBtn = document.querySelector('.close-cart');
 const cartItemsContainer = document.getElementById('cart-items');
 const cartTotalPrice = document.getElementById('cart-total-price');
@@ -99,16 +100,26 @@ window.onclick = function(event) {
         modal.style.display = "none";
         clearEmbers();
     }
+    if (event.target == cartOverlay) {
+        closeCart();
+    }
 }
 
 // UI Interactivity - Cart
-cartIcon.addEventListener('click', () => {
-    cartSidebar.classList.add('active');
-});
+cartIcon.addEventListener('click', openCart);
+closeCartBtn.addEventListener('click', closeCart);
 
-closeCartBtn.addEventListener('click', () => {
+function openCart() {
+    cartSidebar.classList.add('active');
+    cartOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Evitar scroll al ver el carrito
+}
+
+function closeCart() {
     cartSidebar.classList.remove('active');
-});
+    cartOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
 
 // Initialize Application
 function initApp() {
