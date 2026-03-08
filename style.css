@@ -556,8 +556,8 @@ body {
    EFECTO DE FUEGO (PICANTE)
    ================================== */
 .spicy-fire .modal-content {
-    box-shadow: 0 0 50px #ff4d00, 0 0 100px #ffae00, 0 0 150px rgba(255, 77, 0, 0.4);
-    border: 3px solid #ff4d00;
+    box-shadow: 0 0 30px #ff4d00, 0 0 60px rgba(255, 174, 0, 0.4);
+    border: 2px solid #ff4d00;
     animation: fire-glow 2s infinite ease-in-out alternate, zoomIn 0.3s;
     position: relative;
     z-index: 10;
@@ -592,16 +592,16 @@ body {
 
 @keyframes fire-glow {
     0% {
-        box-shadow: 0 0 40px #ff4d00, 0 0 80px #ffae00;
-        transform: scale(1) rotate(0deg);
+        box-shadow: 0 0 30px #ff4d00, 0 0 50px rgba(255, 174, 0, 0.3);
+        transform: scale(1);
     }
     50% {
-        box-shadow: 0 0 70px #ff0000, 0 0 130px #ffae00, 0 0 160px rgba(255, 77, 0, 0.6);
-        transform: scale(1.03) rotate(0.5deg);
+        box-shadow: 0 0 50px #ff0000, 0 0 80px rgba(255, 174, 0, 0.5);
+        transform: scale(1.02);
     }
     100% {
-        box-shadow: 0 0 40px #ff4d00, 0 0 80px #ffae00;
-        transform: scale(1) rotate(-0.5deg);
+        box-shadow: 0 0 30px #ff4d00, 0 0 50px rgba(255, 174, 0, 0.3);
+        transform: scale(1);
     }
 }
 
@@ -638,6 +638,12 @@ body {
     pointer-events: none;
     z-index: -1; /* Arriba del body background pero detrás del contenido */
     overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .sparks-container {
+        display: none;
+    }
 }
 
 .spark {

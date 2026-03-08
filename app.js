@@ -235,7 +235,7 @@ function openModal(imgSrc, name, desc, price, isSpicy) {
 
 function generateEmbers() {
     clearEmbers(); // Asegurar que esté limpio
-    const count = 50;
+    const count = 20;
     
     for (let i = 0; i < count; i++) {
         const ember = document.createElement('div');
