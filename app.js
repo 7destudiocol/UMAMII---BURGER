@@ -212,6 +212,7 @@ function addToCart(productName) {
     } else {
         cart.push({
             name: product.name,
+            category: product.category,
             price: product.price,
             image: product.image,
             quantity: 1
@@ -307,7 +308,9 @@ whatsappBtn.addEventListener('click', () => {
     cart.forEach(item => {
         const itemTotal = item.price * item.quantity;
         total += itemTotal;
-        message += `• *${item.quantity}x* ${item.name} - ${formatColPesos(itemTotal)}\n`;
+        // Prefix with category name (e.g., HAMBURGUESA TRADII)
+        const categoryName = item.category ? item.category.toUpperCase() : '';
+        message += `• *${item.quantity}x* ${categoryName} ${item.name} - ${formatColPesos(itemTotal)}\n`;
     });
     
     message += `\n*TOTAL: ${formatColPesos(total)}*`;
