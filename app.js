@@ -52,16 +52,16 @@ const menuData = {
         { category: "adiciones", name: "HUEVO FRITO", price: 2000, image: "HUEVO_FRITO.webp" },
         { category: "adiciones", name: "CHORIZO", price: 3000, image: "CHORIZO.webp" },
         { category: "adiciones", name: "ADICIÓN DE PROTEÍNA (RES, POLLO O CERDO)", price: 6000 },
-        { category: "adiciones", name: "CHAMPIÑONES", price: 3000, image: "CHAMPIÑONES.jpg" },
+        { category: "adiciones", name: "CHAMPIÑONES", price: 3000, image: "CHAMPIÑONES.webp" },
         { category: "adiciones", name: "AROS DE CEBOLLA", price: 4000 },
 
         // BEBIDAS
-        { category: "bebidas", name: "COCA-COLA", price: 4000, image: "COCA_COLA.jpg" },
-        { category: "bebidas", name: "CUATRO", price: 4000, image: "QUATRO.jpg" },
-        { category: "bebidas", name: "HIT LITRO", price: 8000, image: "HIT.jpg" },
-        { category: "bebidas", name: "CERVEZA POKER", price: 4000, image: "POKER.jpg" },
-        { category: "bebidas", name: "CERVEZA CLUB DORADA", price: 5000, image: "CLUB_COLOMBIA.jpg" },
-        { category: "bebidas", name: "AGUA", price: 3000, image: "AGUA.jpg" }
+        { category: "bebidas", name: "COCA-COLA", price: 4000, image: "COCA_COLA.webp" },
+        { category: "bebidas", name: "CUATRO", price: 4000, image: "QUATRO.webp" },
+        { category: "bebidas", name: "HIT LITRO", price: 8000, image: "HIT.webp" },
+        { category: "bebidas", name: "CERVEZA POKER", price: 4000, image: "POKER.webp" },
+        { category: "bebidas", name: "CERVEZA CLUB DORADA", price: 5000, image: "CLUB_COLOMBIA.webp" },
+        { category: "bebidas", name: "AGUA", price: 3000, image: "AGUA.webp" }
     ]
 };
 
