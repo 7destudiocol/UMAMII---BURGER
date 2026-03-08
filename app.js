@@ -191,7 +191,7 @@ function renderProducts(categoryId) {
                     <span class="product-price">${safePrice}</span>
                 </div>
                 ${product.description ? `<p class="product-desc">${product.description}</p>` : ''}
-                <button class="add-to-cart-btn" onclick="addToCart('${safeName}')">
+                <button class="add-to-cart-btn" onclick="addToCart('${safeName}', '${product.category}')">
                     <i class="fas fa-plus"></i> AGREGAR AL CARRITO
                 </button>
             </div>
@@ -202,11 +202,11 @@ function renderProducts(categoryId) {
 }
 
 // Shopping Cart Functions
-function addToCart(productName) {
-    const product = menuData.products.find(p => p.name === productName);
+function addToCart(productName, categoryId) {
+    const product = menuData.products.find(p => p.name === productName && p.category === categoryId);
     if (!product) return;
 
-    const existingItem = cart.find(item => item.name === productName);
+    const existingItem = cart.find(item => item.name === productName && item.category === categoryId);
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
@@ -229,8 +229,8 @@ function addToCart(productName) {
     }, 10);
 }
 
-function removeFromCart(productName) {
-    const itemIndex = cart.findIndex(item => item.name === productName);
+function removeFromCart(productName, categoryId) {
+    const itemIndex = cart.findIndex(item => item.name === productName && item.category === categoryId);
     if (itemIndex > -1) {
         if (cart[itemIndex].quantity > 1) {
             cart[itemIndex].quantity -= 1;
@@ -242,8 +242,8 @@ function removeFromCart(productName) {
     updateCartUI();
 }
 
-function deleteFromCart(productName) {
-    cart = cart.filter(item => item.name !== productName);
+function deleteFromCart(productName, categoryId) {
+    cart = cart.filter(item => !(item.name === productName && item.category === categoryId));
     saveCart();
     updateCartUI();
 }
@@ -279,13 +279,13 @@ function updateCartUI() {
         itemEl.innerHTML = `
             <img src="${imgSrc}" alt="${item.name}" class="cart-item-img">
             <div class="cart-item-details">
-                <h4 class="cart-item-name">${item.name}</h4>
+                <h4 class="cart-item-name">${item.name} <small style="display:block; font-size: 0.7rem; color: var(--primary-color); opacity: 0.8;">${item.category.toUpperCase()}</small></h4>
                 <div class="cart-item-price">${formatColPesos(item.price)}</div>
                 <div class="cart-item-controls">
-                    <button onclick="removeFromCart('${item.name.replace(/'/g, "\\'")}')"><i class="fas fa-minus"></i></button>
+                    <button onclick="removeFromCart('${item.name.replace(/'/g, "\\'")}', '${item.category}')"><i class="fas fa-minus"></i></button>
                     <span>${item.quantity}</span>
-                    <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}')"><i class="fas fa-plus"></i></button>
-                    <button style="margin-left: auto; color: #ff0000; border-color: rgba(255,0,0,0.3);" onclick="deleteFromCart('${item.name.replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i></button>
+                    <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}', '${item.category}')"><i class="fas fa-plus"></i></button>
+                    <button style="margin-left: auto; color: #ff0000; border-color: rgba(255,0,0,0.3);" onclick="deleteFromCart('${item.name.replace(/'/g, "\\'")}', '${item.category}')"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
         `;
