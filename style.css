@@ -556,24 +556,75 @@ body {
    EFECTO DE FUEGO (PICANTE)
    ================================== */
 .spicy-fire .modal-content {
-    box-shadow: 0 0 50px #ff4d00, 0 0 100px #ffae00;
-    border: 2px solid #ff4d00;
-    animation: fire-glow 1.5s infinite alternate, zoomIn 0.3s;
+    box-shadow: 0 0 50px #ff4d00, 0 0 100px #ffae00, 0 0 150px rgba(255, 77, 0, 0.4);
+    border: 3px solid #ff4d00;
+    animation: fire-glow 2s infinite ease-in-out alternate, zoomIn 0.3s;
+    position: relative;
+    z-index: 10;
 }
 
 .spicy-fire #modal-caption {
     color: #ff4d00;
-    text-shadow: 0 0 10px #ffae00;
+    text-shadow: 0 0 15px #ffae00, 0 0 30px #ff4d00;
+    animation: text-flicker 1.5s infinite;
+}
+
+#embers-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+}
+
+.ember {
+    position: absolute;
+    bottom: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffae00 20%, #ff4d00 60%, rgba(255, 77, 0, 0) 100%);
+    box-shadow: 0 0 10px #ffae00, 0 0 20px #ff4d00;
+    opacity: 0;
+    will-change: transform, opacity;
 }
 
 @keyframes fire-glow {
-    from {
-        box-shadow: 0 0 30px #ff4d00, 0 0 60px #ffae00;
-        transform: scale(1);
+    0% {
+        box-shadow: 0 0 40px #ff4d00, 0 0 80px #ffae00;
+        transform: scale(1) rotate(0deg);
     }
-    to {
-        box-shadow: 0 0 60px #ff0000, 0 0 120px #ffae00;
-        transform: scale(1.02);
+    50% {
+        box-shadow: 0 0 70px #ff0000, 0 0 130px #ffae00, 0 0 160px rgba(255, 77, 0, 0.6);
+        transform: scale(1.03) rotate(0.5deg);
+    }
+    100% {
+        box-shadow: 0 0 40px #ff4d00, 0 0 80px #ffae00;
+        transform: scale(1) rotate(-0.5deg);
+    }
+}
+
+@keyframes text-flicker {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+    70% { opacity: 0.9; transform: scale(0.98); }
+}
+
+@keyframes ember-rise {
+    0% {
+        transform: translateY(0) translateX(0) scale(1);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(-110vh) translateX(var(--lateral-drift)) scale(0);
+        opacity: 0;
     }
 }
 

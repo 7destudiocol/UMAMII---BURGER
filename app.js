@@ -73,6 +73,7 @@ const modal = document.getElementById('image-modal');
 const modalImg = document.getElementById('modal-img');
 const captionText = document.getElementById('modal-caption');
 const closeModalBtn = document.getElementsByClassName('close-modal')[0];
+const embersContainer = document.getElementById('embers-container');
 
 // State
 let currentCategory = 'hamburguesas';
@@ -80,11 +81,13 @@ let currentCategory = 'hamburguesas';
 // UI Interactivity - Modal
 closeModalBtn.onclick = function() {
     modal.style.display = "none";
+    clearEmbers();
 }
 
 window.onclick = function(event) {
     if (event.target == modal) {
         modal.style.display = "none";
+        clearEmbers();
     }
 }
 
@@ -190,8 +193,10 @@ function openModal(imgSrc, name, desc, price, isSpicy) {
     // Aplicar efecto de fuego si es picante
     if (isSpicy) {
         modal.classList.add('spicy-fire');
+        generateEmbers();
     } else {
         modal.classList.remove('spicy-fire');
+        clearEmbers();
     }
     
     // Asignar precio
@@ -225,6 +230,37 @@ function openModal(imgSrc, name, desc, price, isSpicy) {
         descElement.style.display = "flex";
     } else {
         descElement.style.display = "none";
+    }
+}
+
+function generateEmbers() {
+    clearEmbers(); // Asegurar que esté limpio
+    const count = 50;
+    
+    for (let i = 0; i < count; i++) {
+        const ember = document.createElement('div');
+        ember.className = 'ember';
+        
+        // Propiedades aleatorias para naturalidad
+        const size = Math.random() * 8 + 4; // Entre 4px y 12px
+        const left = Math.random() * 100; // Posición horizontal
+        const duration = Math.random() * 2 + 1.5; // Entre 1.5s y 3.5s
+        const delay = Math.random() * 3; // Hasta 3s de retraso inicial
+        const drift = (Math.random() - 0.5) * 200; // Desviación lateral
+        
+        ember.style.width = `${size}px`;
+        ember.style.height = `${size}px`;
+        ember.style.left = `${left}%`;
+        ember.style.setProperty('--lateral-drift', `${drift}px`);
+        ember.style.animation = `ember-rise ${duration}s ${delay}s infinite ease-out`;
+        
+        embersContainer.appendChild(ember);
+    }
+}
+
+function clearEmbers() {
+    if (embersContainer) {
+        embersContainer.innerHTML = '';
     }
 }
 
