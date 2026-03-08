@@ -553,6 +553,31 @@ body {
 }
 
 /* ==================================
+   EFECTO DE FUEGO (PICANTE)
+   ================================== */
+.spicy-fire .modal-content {
+    box-shadow: 0 0 50px #ff4d00, 0 0 100px #ffae00;
+    border: 2px solid #ff4d00;
+    animation: fire-glow 1.5s infinite alternate, zoomIn 0.3s;
+}
+
+.spicy-fire #modal-caption {
+    color: #ff4d00;
+    text-shadow: 0 0 10px #ffae00;
+}
+
+@keyframes fire-glow {
+    from {
+        box-shadow: 0 0 30px #ff4d00, 0 0 60px #ffae00;
+        transform: scale(1);
+    }
+    to {
+        box-shadow: 0 0 60px #ff0000, 0 0 120px #ffae00;
+        transform: scale(1.02);
+    }
+}
+
+/* ==================================
    EFECTO DE CHISPAS (PARRILLA)
    ================================== */
 .sparks-container {

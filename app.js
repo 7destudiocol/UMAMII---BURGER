@@ -27,7 +27,7 @@ const menuData = {
         { category: "perros", name: "CHICKEN", price: 20000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso, tocineta, pollo desmechado en salsa.", image: "PERRO CHICKEN.webp" },
         { category: "perros", name: "CRIOLLO", price: 21000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso, tocineta, maicitos, chorizo, ahogado y carne mechada en salsa." },
         { category: "perros", name: "CHICKEN (ALOHA O CHAMPI)", price: 21000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso, tocineta, pollo desmechado en salsa, mermelada de piña o champiñones." },
-        { category: "perros", name: "ORALE", price: 21000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso tipo cheddar, tocineta, carne de res con jalapeños y maicitos.", image: "PERRO ORALE.webp" },
+        { category: "perros", name: "ORALE", price: 21000, description: "Pan brioche, salsa de la casa, salchicha, ripio, doble queso tipo cheddar, tocineta, carne de res con jalapeños y maicitos.", image: "PERRO ORALE.webp", spicy: true },
 
         // SANDWICHES
         { category: "sandwiches", name: "PULLED PORK", price: 20000, description: "Pan brioche, doble jamón, coleslaw, pulled pork en salsa de la casa, doble queso y cebollitas encurtidas.", image: "SANDWICH - PULLED PORK.webp" },
@@ -40,20 +40,20 @@ const menuData = {
         { category: "salchipapas", name: "LA MONTAÑERA", price: 25000, description: "Papas, salchicha, salsa BBQ, Salsa de queso cheddar, Queso blanco, Tocineta, Res en salsas, Maicitos, Chorizo y huevo frito." },
         { category: "salchipapas", name: "PORKY", price: 24000, description: "Papas, salchicha, salsa BBQ, Salsa de queso cheddar, Queso cheddar y Tocineta, Cerdo en salsas, cebollitas encurtidas." },
         { category: "salchipapas", name: "MIXTA", price: 26000, description: "Papas, salchicha, salsa BBQ, Salsa de queso cheddar, Queso blanco, Queso cheddar, Tocineta, maicitos con pollo y carne con chorizo en salsas." },
-        { category: "salchipapas", name: "TEX-MEX", price: 25000, description: "Papas, salchicha, salsa BBQ, Salsa de queso cheddar, Queso blanco, Queso cheddar, Tocineta, Carne de burger con jalapeños maicitos y salsas." },
+        { category: "salchipapas", name: "TEX-MEX", price: 25000, description: "Papas, salchicha, salsa BBQ, Salsa de queso cheddar, Queso blanco, Queso cheddar, Tocineta, Carne de burger con jalapeños maicitos y salsas.", spicy: true },
 
         // ADICIONES
         { category: "adiciones", name: "QUESO BLANCO", price: 2000, image: "QUESO_BLANCO_USER.webp" },
         { category: "adiciones", name: "QUESO TIPO CHEDDAR", price: 3000, image: "QUESO_CHEDDAR_USER.webp" },
         { category: "adiciones", name: "PORCIÓN DE PAPAS", price: 5000, image: "ADICION_PORCION_PAPAS.webp" },
         { category: "adiciones", name: "TOCINETA", price: 3000, image: "TOCINETA.webp" },
-        { category: "adiciones", name: "CEBOLLA CARAMELIZADA", price: 1000 },
+        { category: "adiciones", name: "CEBOLLA CARAMELIZADA", price: 1000, image: "CEBOLLA_CARAMELIZADA.webp" },
         { category: "adiciones", name: "MERMELADA DE PIÑA", price: 3000, image: "MERMELADA_PIÑA.webp" },
         { category: "adiciones", name: "HUEVO FRITO", price: 2000, image: "HUEVO_FRITO.webp" },
         { category: "adiciones", name: "CHORIZO", price: 3000, image: "CHORIZO.webp" },
         { category: "adiciones", name: "ADICIÓN DE PROTEÍNA (RES, POLLO O CERDO)", price: 6000 },
         { category: "adiciones", name: "CHAMPIÑONES", price: 3000, image: "CHAMPIÑONES.webp" },
-        { category: "adiciones", name: "AROS DE CEBOLLA", price: 4000 },
+        { category: "adiciones", name: "AROS DE CEBOLLA", price: 4000, image: "AROS_DE_CEBOLLA.webp" },
 
         // BEBIDAS
         { category: "bebidas", name: "COCA-COLA", price: 4000, image: "COCA_COLA.webp" },
@@ -166,12 +166,12 @@ function renderProducts(categoryId) {
 
         const safePrice = formatColPesos(product.price);
         card.innerHTML = `
-            <div class="product-image-container" onclick="openModal('${imgSrc}', '${safeName}', '${safeDesc}', '${safePrice}')">
+            <div class="product-image-container" onclick="openModal('${imgSrc}', '${safeName}', '${safeDesc}', '${safePrice}', ${product.spicy || false})">
                 <img src="${imgSrc}" alt="${product.name}" class="${imgClass}" loading="lazy">
             </div>
             <div class="product-info">
                 <div class="product-header">
-                    <h3 class="product-title">${product.name}</h3>
+                    <h3 class="product-title">${product.name}${product.spicy ? ' 🌶️' : ''}</h3>
                     <span class="product-price">${safePrice}</span>
                 </div>
                 ${product.description ? `<p class="product-desc">${product.description}</p>` : ''}
@@ -182,10 +182,17 @@ function renderProducts(categoryId) {
     });
 }
 
-function openModal(imgSrc, name, desc, price) {
+function openModal(imgSrc, name, desc, price, isSpicy) {
     modal.style.display = "block";
     modalImg.src = imgSrc;
-    captionText.innerHTML = name;
+    captionText.innerHTML = isSpicy ? `${name} 🌶️` : name;
+    
+    // Aplicar efecto de fuego si es picante
+    if (isSpicy) {
+        modal.classList.add('spicy-fire');
+    } else {
+        modal.classList.remove('spicy-fire');
+    }
     
     // Asignar precio
     const priceElement = document.getElementById('modal-price');
