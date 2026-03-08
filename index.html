@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMAMI Burger | Nuestro Menú</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Efecto CSS de chispas de parrilla (Sparks) -->
+    <div class="sparks-container">
+        <!-- Chispas base -->
+        <div class="spark s1"></div><div class="spark s2"></div>
+        <div class="spark s3"></div><div class="spark s4"></div>
+        <div class="spark s5"></div><div class="spark s6"></div>
+        <div class="spark s7"></div><div class="spark s8"></div>
+        <!-- Chispas extra 1 -->
+        <div class="spark s9"></div><div class="spark s10"></div>
+        <div class="spark s11"></div><div class="spark s12"></div>
+        <div class="spark s13"></div><div class="spark s14"></div>
+        <div class="spark s15"></div><div class="spark s16"></div>
+        <!-- Chispas extra 2 -->
+        <div class="spark s17"></div><div class="spark s18"></div>
+        <div class="spark s19"></div><div class="spark s20"></div>
+        <div class="spark s21"></div><div class="spark s22"></div>
+        <div class="spark s23"></div><div class="spark s24"></div>
+    </div>
+
+    <!-- Pantalla de carga (Loader Humburguesa) -->
+    <div id="loader-wrapper">
+        <div class="burger-loader">
+            <div class="bun-top"></div>
+            <div class="lettuce"></div>
+            <div class="tomato"></div>
+            <div class="patty"></div>
+            <div class="bun-bottom"></div>
+        </div>
+        <p class="loader-text">PREPARANDO TU PEDIDO...</p>
+    </div>
+
+    <!-- Modal para ver imágenes en grande -->
+    <div id="image-modal" class="modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modal-img">
+        <div id="modal-caption-container">
+            <h2 id="modal-caption"></h2>
+            <p id="modal-desc"></p>
+        </div>
+    </div>
+
+    <header class="header">
+        <div class="logo-container">
+            <!-- Logo clickeable hacia Instagram -->
+            <a href="https://www.instagram.com/umamiiburger_" target="_blank" rel="noopener noreferrer">
+                <img src="assets/img/Logo (2).jpeg" alt="UMAMI Fast Food Logo" class="logo">
+            </a>
+        </div>
+        <h1 class="main-title">NUESTRO <span class="highlight">MENÚ</span></h1>
+    </header>
+
+    <nav class="category-nav">
+        <!-- Generado dinámicamente -->
+        <ul id="category-list">
+            <!-- Ej: <li class="active" data-category="hamburguesas">Hamburguesas</li> -->
+        </ul>
+    </nav>
+
+    <main class="menu-container">
+        <!-- Renderizado dinámicamente -->
+        <section id="menu-grid" class="menu-grid">
+            <!-- Cards de productos -->
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="contact-info">
+            <a href="https://wa.me/573233519428?text=Hola%20UMAMI%21%20%F0%9F%8D%94%20Vengo%20del%20men%C3%BA%20virtual%20y%20me%20gustar%C3%ADa%20hacer%20un%20pedido%20delicioso." target="_blank" rel="noopener noreferrer" class="contact-item link-item">
+                <i class="fa-brands fa-whatsapp"></i>
+                <div>
+                    <p>DOMICILIO:</p>
+                    <strong>3233519428</strong>
+                </div>
+            </a>
+            <a href="https://www.instagram.com/umamiiburger_" target="_blank" rel="noopener noreferrer" class="contact-item link-item">
+                <i class="fa-brands fa-instagram"></i>
+                <div>
+                    <p>INSTAGRAM:</p>
+                    <strong>@UMAMIIBURGER_</strong>
+                </div>
+            </a>
+        </div>
+        <p class="copyright">&copy; 2024 UMAMI Fast Food. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- JS -->
+    <script src="app.js"></script>
+</body>
+</html>
