@@ -112,17 +112,23 @@ closeCartBtn.addEventListener('click', () => {
 
 // Initialize Application
 function initApp() {
-    renderCategories();
-    renderProducts(currentCategory);
-    updateCartUI();
-    
-    // Simular un tiempo de carga para mostrar el loader de hamburguesa
-    setTimeout(() => {
-        loaderWrapper.style.opacity = '0';
+    try {
+        renderCategories();
+        renderProducts(currentCategory);
+        updateCartUI();
+    } catch (error) {
+        console.error("Error during initialization:", error);
+    } finally {
+        // Asegurar que el loader se oculte pase lo que pase
         setTimeout(() => {
-            loaderWrapper.style.visibility = 'hidden';
-        }, 500);
-    }, 1500); // 1.5s de carga ficticia
+            if (loaderWrapper) {
+                loaderWrapper.style.opacity = '0';
+                setTimeout(() => {
+                    loaderWrapper.style.visibility = 'hidden';
+                }, 500);
+            }
+        }, 1000); // Reducimos un poco el tiempo para mejor UX
+    }
 }
 
 // Render Categories
@@ -274,18 +280,20 @@ function updateCartUI() {
         
         const imgSrc = item.image ? `assets/img/${item.image}` : `assets/img/Logo (2).webp`;
         
+        const itemCategory = item.category ? item.category.toUpperCase() : 'VARIOS';
+        
         const itemEl = document.createElement('div');
         itemEl.className = 'cart-item';
         itemEl.innerHTML = `
             <img src="${imgSrc}" alt="${item.name}" class="cart-item-img">
             <div class="cart-item-details">
-                <h4 class="cart-item-name">${item.name} <small style="display:block; font-size: 0.7rem; color: var(--primary-color); opacity: 0.8;">${item.category.toUpperCase()}</small></h4>
+                <h4 class="cart-item-name">${item.name} <small style="display:block; font-size: 0.7rem; color: var(--primary-color); opacity: 0.8;">${itemCategory}</small></h4>
                 <div class="cart-item-price">${formatColPesos(item.price)}</div>
                 <div class="cart-item-controls">
-                    <button onclick="removeFromCart('${item.name.replace(/'/g, "\\'")}', '${item.category}')"><i class="fas fa-minus"></i></button>
+                    <button onclick="removeFromCart('${item.name.replace(/'/g, "\\'")}', '${item.category || ''}')"><i class="fas fa-minus"></i></button>
                     <span>${item.quantity}</span>
-                    <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}', '${item.category}')"><i class="fas fa-plus"></i></button>
-                    <button style="margin-left: auto; color: #ff0000; border-color: rgba(255,0,0,0.3);" onclick="deleteFromCart('${item.name.replace(/'/g, "\\'")}', '${item.category}')"><i class="fas fa-trash"></i></button>
+                    <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}', '${item.category || ''}')"><i class="fas fa-plus"></i></button>
+                    <button style="margin-left: auto; color: #ff0000; border-color: rgba(255,0,0,0.3);" onclick="deleteFromCart('${item.name.replace(/'/g, "\\'")}', '${item.category || ''}')"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
         `;
