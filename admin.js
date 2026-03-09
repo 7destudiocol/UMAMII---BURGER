@@ -2,7 +2,9 @@
 const SUPABASE_URL = 'https://gvdvgjredmqojtsogrkn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2ZHZnanJlZG1xb2p0c29ncmtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNzA0MDYsImV4cCI6MjA4Nzk0NjQwNn0.LFBqn7gz1HWSnULa3uC9N_MHg1BiUFoUzG_MF_BtntA';
 
+// State
 let _supabase = null;
+let currentFilter = 'day';
 
 // Initialize Supabase
 function initSupabase() {
@@ -37,11 +39,37 @@ function showTab(tabId) {
     loadTabData(tabId);
 }
 
+// Date Filter Logic
+function setFilter(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.toLowerCase().includes(filter === 'day' ? 'hoy' : filter === 'week' ? 'semana' : filter === 'month' ? 'mes' : 'año'));
+    });
+    loadStats();
+}
+
+function getDateRange() {
+    const now = new Date();
+    let start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    if (currentFilter === 'week') {
+        const day = start.getDay() || 7;
+        if (day !== 1) start.setHours(-24 * (day - 1));
+    } else if (currentFilter === 'month') {
+        start.setDate(1);
+    } else if (currentFilter === 'year') {
+        start.setMonth(0, 1);
+    }
+    return start.toISOString();
+}
+
 // Data Loading Registry
 async function initDashboard() {
     initSupabase();
+    initPOS();
+    await syncMenuWithDB();
     loadStats();
-    loadTabData('stats');
 }
 
 async function loadTabData(tabId) {
@@ -55,47 +83,115 @@ async function loadTabData(tabId) {
     }
 }
 
+// --- POS / Manual Sales ---
+function initPOS() {
+    const catSelect = document.getElementById('pos-category');
+    catSelect.innerHTML = '<option value="">Categoría</option>' + 
+        menuData.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function updatePOSProducts() {
+    const catId = document.getElementById('pos-category').value;
+    const prodSelect = document.getElementById('pos-product');
+    const filtered = menuData.products.filter(p => p.category === catId);
+    
+    prodSelect.innerHTML = '<option value="">Producto</option>' + 
+        filtered.map(p => `<option value="${p.name}">${p.name} ($${p.price})</option>`).join('');
+}
+
+async function addManualSale() {
+    const productName = document.getElementById('pos-product').value;
+    const qty = parseInt(document.getElementById('pos-qty').value);
+    
+    if (!productName || qty < 1) return alert('Selecciona producto y cantidad');
+
+    const product = menuData.products.find(p => p.name === productName);
+    
+    // Get DB product ID
+    const { data: dbProd } = await _supabase.from('products').select('id').eq('name', productName).single();
+    
+    const { error } = await _supabase.from('sales').insert([{
+        product_id: dbProd.id,
+        quantity: qty,
+        total_price: product.price * qty,
+        notes: 'Venta Manual POS'
+    }]);
+
+    if (error) alert('Error: ' + error.message);
+    else {
+        alert('Venta registrada!');
+        loadSales();
+        loadStats();
+    }
+}
+
 // --- Stats Logic ---
 async function loadStats() {
     if (!_supabase) return;
+    const startDate = getDateRange();
 
     // Fetch Income
-    const { data: salesData } = await _supabase.from('sales').select('total_price');
+    const { data: salesData } = await _supabase.from('sales')
+        .select('*, products(name)')
+        .gte('sale_date', startDate);
+    
     const income = salesData ? salesData.reduce((acc, s) => acc + parseFloat(s.total_price), 0) : 0;
 
     // Fetch Expenses
-    const { data: expensesData } = await _supabase.from('expenses').select('amount');
+    const { data: expensesData } = await _supabase.from('expenses')
+        .select('*')
+        .gte('expense_date', startDate);
+        
     const expenses = expensesData ? expensesData.reduce((acc, e) => acc + parseFloat(e.amount), 0) : 0;
     
     document.getElementById('total-income-val').innerText = `$${income.toLocaleString()}`;
     document.getElementById('total-expenses-val').innerText = `$${expenses.toLocaleString()}`;
     document.getElementById('cash-flow-val').innerText = `$${(income - expenses).toLocaleString()}`;
 
-    await renderChart();
+    updateRankingTable(salesData);
+    renderChart(salesData);
 }
 
-async function renderChart() {
-    // Using the view created in the SQL schema
-    const { data: summary, error } = await _supabase
-        .from('product_sales_summary')
-        .select('*');
-    
-    if (error) console.error("Error loading chart data:", error);
+function updateRankingTable(sales) {
+    const ranking = {};
+    sales.forEach(s => {
+        const name = s.products ? s.products.name : 'Desconocido';
+        if (!ranking[name]) ranking[name] = { qty: 0, total: 0 };
+        ranking[name].qty += s.quantity;
+        ranking[name].total += parseFloat(s.total_price);
+    });
 
-    const labels = summary && summary.length > 0 ? summary.map(s => s.name) : ['Sin datos'];
-    const values = summary && summary.length > 0 ? summary.map(s => s.total_sold) : [0];
+    const sorted = Object.entries(ranking).sort((a, b) => b[1].qty - a[1].qty);
+    const tbody = document.querySelector('#product-ranking-table tbody');
+    tbody.innerHTML = sorted.map(([name, data]) => `
+        <tr>
+            <td>${name}</td>
+            <td>${data.qty}</td>
+            <td>$${data.total.toLocaleString()}</td>
+        </tr>
+    `).join('');
+}
+
+async function renderChart(sales) {
+    const ranking = {};
+    sales.forEach(s => {
+        const name = s.products ? s.products.name : 'Desconocido';
+        ranking[name] = (ranking[name] || 0) + s.quantity;
+    });
+
+    const labels = Object.keys(ranking).slice(0, 10);
+    const values = Object.values(ranking).slice(0, 10);
 
     const ctx = document.getElementById('topProductsChart').getContext('2d');
-    
     if (window.myChart) window.myChart.destroy();
 
     window.myChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels,
+            labels: labels.length ? labels : ['Sin datos'],
             datasets: [{
-                label: 'Unidades Vendidas',
-                data: values,
+                label: 'Unidades',
+                data: values.length ? values : [0],
                 backgroundColor: 'rgba(255, 204, 0, 0.6)',
                 borderColor: '#ffcc00',
                 borderWidth: 1
@@ -103,6 +199,7 @@ async function renderChart() {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } },
                 x: { grid: { display: false } }
@@ -110,6 +207,24 @@ async function renderChart() {
             plugins: { legend: { display: false } }
         }
     });
+}
+
+// --- DB Sync ---
+async function syncMenuWithDB() {
+    const { data: existingProds } = await _supabase.from('products').select('name');
+    const existingNames = new Set(existingProds.map(p => p.name));
+
+    const newProds = menuData.products
+        .filter(p => !existingNames.has(p.name))
+        .map(p => ({
+            name: p.name,
+            price: p.price,
+            category: menuData.categories.find(c => c.id === p.category).name
+        }));
+
+    if (newProds.length > 0) {
+        await _supabase.from('products').insert(newProds);
+    }
 }
 
 // --- Sales Management ---

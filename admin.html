@@ -13,7 +13,7 @@
     <!-- Login Overlay -->
     <div id="login-overlay" class="overlay">
         <div class="login-box">
-            <img src="assets/logo.webp" alt="Umami Logo" class="login-logo">
+            <img src="assets/img/Logo (2).webp" alt="Umami Logo" class="login-logo">
             <h1>Acceso Restringido</h1>
             <p>Ingresa la contraseña para acceder al panel de contabilidad.</p>
             <input type="password" id="admin-pass" placeholder="Contraseña">
@@ -26,7 +26,7 @@
     <div id="admin-dashboard" class="dashboard hidden">
         <nav class="sidebar">
             <div class="sidebar-header">
-                <img src="assets/logo.webp" alt="Logo" class="mini-logo">
+                <img src="assets/img/Logo (2).webp" alt="Logo" class="mini-logo">
                 <span>Admin Umami</span>
             </div>
             <ul class="nav-links">
@@ -44,29 +44,52 @@
             <!-- Summary Tab -->
             <section id="tab-stats" class="tab-content active">
                 <header>
-                    <h2>Resumen de Flujo de Caja</h2>
+                    <div class="header-left">
+                        <h2>Resumen de Flujo</h2>
+                        <div class="time-filters">
+                            <button class="filter-btn active" onclick="setFilter('day')">Hoy</button>
+                            <button class="filter-btn" onclick="setFilter('week')">Semana</button>
+                            <button class="filter-btn" onclick="setFilter('month')">Mes</button>
+                            <button class="filter-btn" onclick="setFilter('year')">Año</button>
+                        </div>
+                    </div>
                     <button class="export-btn" onclick="exportDataToCSV()">Descargar CSV</button>
                 </header>
                 
                 <div class="stats-grid">
                     <div class="stat-card income">
-                        <h3>Ingresos Totales</h3>
+                        <h3>Ingresos</h3>
                         <p id="total-income-val">$0</p>
                     </div>
                     <div class="stat-card expense">
-                        <h3>Gastos Totales</h3>
+                        <h3>Gastos</h3>
                         <p id="total-expenses-val">$0</p>
                     </div>
                     <div class="stat-card flow">
-                        <h3>Flujo de Caja</h3>
+                        <h3>Neto</h3>
                         <p id="cash-flow-val">$0</p>
                     </div>
                 </div>
 
-                <div class="charts-section">
+                <div class="dashboard-grid">
                     <div class="chart-container">
-                        <h3>Productos Más Vendidos</h3>
+                        <h3>Ventas por Producto (Unidades)</h3>
                         <canvas id="topProductsChart"></canvas>
+                    </div>
+                    <div class="table-card">
+                        <h3>Ranking de Productos</h3>
+                        <div class="scroll-table">
+                            <table id="product-ranking-table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cant.</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -74,9 +97,25 @@
             <!-- Sales Tab -->
             <section id="tab-sales" class="tab-content hidden">
                 <header>
-                    <h2>Registro de Ventas</h2>
-                    <button class="add-btn" onclick="openModal('sale')">+ Nueva Venta</button>
+                    <h2>Control de Ventas</h2>
                 </header>
+
+                <div class="pos-container">
+                    <div class="pos-entry">
+                        <h3>Venta Manual (POS)</h3>
+                        <div class="pos-form">
+                            <select id="pos-category" onchange="updatePOSProducts()">
+                                <option value="">Selecciona Categoría</option>
+                            </select>
+                            <select id="pos-product">
+                                <option value="">Selecciona Producto</option>
+                            </select>
+                            <input type="number" id="pos-qty" value="1" min="1">
+                            <button class="add-btn" onclick="addManualSale()">Registrar Venta</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-container">
                     <table id="sales-table">
                         <thead>
@@ -151,6 +190,7 @@
         </div>
     </div>
 
+    <script src="menu-data.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>
