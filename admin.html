@@ -71,6 +71,9 @@
                         </div>
                     </div>
                     <div class="header-actions">
+                        <button class="add-btn" onclick="openModal('income')" style="background: var(--success); margin-right: 0.5rem;">
+                            <i class="fas fa-plus"></i> Registrar Ingreso
+                        </button>
                         <button class="export-btn" onclick="exportDataToCSV()">
                             <i class="fas fa-file-csv"></i> Descargar CSV
                         </button>
@@ -165,14 +168,6 @@
                     </div>
                 </div>
 
-                <!-- Dashboard Products Catalog -->
-                <div class="monthly-table-container mt-3">
-                    <div class="table-section-header">
-                        <h3><i class="fas fa-box-open"></i> Catálogo de Productos</h3>
-                        <div id="dash-cat-filters" class="dash-cat-filters"></div>
-                    </div>
-                    <div id="dashboard-products-grid" class="products-mini-grid"></div>
-                </div>
             </section>
 
             <!-- ===== SALES TAB (CART MODE) ===== -->
@@ -190,6 +185,10 @@
                 <div class="cart-layout">
                     <!-- Left: Product Grid -->
                     <div class="cart-products-panel">
+                        <div class="search-container">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="sales-product-search" placeholder="Buscar producto..." oninput="filterSalesBySearch(this.value)">
+                        </div>
                         <div id="sales-cat-filters" class="sales-cat-filters"></div>
                         <div id="sales-product-grid" class="pos-grid sales-grid"></div>
                     </div>
@@ -276,13 +275,24 @@
                         <div class="icon-bg"><i class="fas fa-box"></i></div>
                         <div>
                             <h2>Gestión de Productos</h2>
-                            <p class="subtitle">Administra el catálogo de productos</p>
+                            <p class="subtitle">Administra el catálogo y edita precios</p>
                         </div>
                     </div>
                     <button class="add-btn" onclick="openModal('product')">
                         <i class="fas fa-plus"></i> Nuevo Producto
                     </button>
                 </header>
+
+                <!-- Visual Catalog -->
+                <div class="monthly-table-container" style="margin-bottom:1.5rem">
+                    <div class="table-section-header">
+                        <h3><i class="fas fa-th-large"></i> Catálogo Visual</h3>
+                        <div id="products-cat-filters" class="dash-cat-filters"></div>
+                    </div>
+                    <div id="products-visual-grid" class="products-mini-grid"></div>
+                </div>
+
+                <!-- Full Table -->
                 <div class="table-container">
                     <div class="scroll-table">
                         <table id="products-table">

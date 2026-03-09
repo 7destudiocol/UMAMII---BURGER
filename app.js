@@ -2,6 +2,29 @@
  * UMAMI Burger - Logic and Data
  */
 
+// ── Supabase ──────────────────────────────────────────────────
+const SUPABASE_URL = 'https://gvdvgjredmqojtsogrkn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2ZHZnanJlZG1xb2p0c29ncmtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNzA0MDYsImV4cCI6MjA4Nzk0NjQwNn0.LFBqn7gz1HWSnULa3uC9N_MHg1BiUFoUzG_MF_BtntA';
+let _db = null;
+
+function getDB() {
+    if (!_db) _db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    return _db;
+}
+
+// ── Product cache (loaded from Supabase) ──────────────────────
+let dbProducts = [];
+
+// Category order & display names (used for nav)
+const CATEGORY_META = [
+    { id: 'hamburguesas', name: 'Hamburguesas' },
+    { id: 'perros',       name: 'Perros' },
+    { id: 'sandwiches',   name: 'Sándwiches' },
+    { id: 'salchipapas',  name: 'Salchipapas' },
+    { id: 'adiciones',    name: 'Adiciones' },
+    { id: 'bebidas',      name: 'Bebidas' },
+];
+
 // DOM Elements
 const categoryList = document.getElementById('category-list');
 const menuGrid = document.getElementById('menu-grid');
@@ -77,15 +100,33 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Initialize Application
-function initApp() {
+async function initApp() {
     try {
+        // Load products from Supabase
+        const { data, error } = await getDB()
+            .from('umamii_products')
+            .select('*')
+            .order('category')
+            .order('name');
+
+        if (error) throw error;
+        dbProducts = data || [];
+
+        // Fallback: if DB is empty use static data
+        if (dbProducts.length === 0) {
+            dbProducts = menuData.products;
+        }
+
         renderCategories();
         renderProducts(currentCategory);
         updateCartUI();
     } catch (error) {
-        console.error("Error during initialization:", error);
+        console.warn('Supabase error, using static data:', error);
+        dbProducts = menuData.products;
+        renderCategories();
+        renderProducts(currentCategory);
+        updateCartUI();
     } finally {
-        // Asegurar que el loader se oculte pase lo que pase
         setTimeout(() => {
             if (loaderWrapper) {
                 loaderWrapper.style.opacity = '0';
@@ -93,15 +134,24 @@ function initApp() {
                     loaderWrapper.style.visibility = 'hidden';
                 }, 500);
             }
-        }, 1000); // Reducimos un poco el tiempo para mejor UX
+        }, 1000);
     }
 }
 
 // Render Categories
 function renderCategories() {
     categoryList.innerHTML = '';
-    
-    menuData.categories.forEach(category => {
+
+    // Build list of categories that have at least one product in DB
+    const activeCatIds = new Set(dbProducts.map(p => p.category));
+    const categories = CATEGORY_META.filter(c => activeCatIds.has(c.id));
+
+    // If currentCategory has no products, reset to first available
+    if (!activeCatIds.has(currentCategory) && categories.length > 0) {
+        currentCategory = categories[0].id;
+    }
+
+    categories.forEach(category => {
         const li = document.createElement('li');
         li.textContent = category.name;
         li.dataset.category = category.id;
@@ -133,9 +183,9 @@ const formatColPesos = (price) => {
 // Render Products
 function renderProducts(categoryId) {
     menuGrid.innerHTML = '';
-    
-    const filteredProducts = menuData.products.filter(p => p.category === categoryId);
-    
+
+    const filteredProducts = dbProducts.filter(p => p.category === categoryId);
+
     if (filteredProducts.length === 0) {
         menuGrid.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color: var(--text-secondary);">Aún no hay productos en esta categoría.</p>';
         return;
@@ -175,7 +225,7 @@ function renderProducts(categoryId) {
 
 // Shopping Cart Functions
 function addToCart(productName, categoryId) {
-    const product = menuData.products.find(p => p.name === productName && p.category === categoryId);
+    const product = dbProducts.find(p => p.name === productName && p.category === categoryId);
     if (!product) return;
 
     const existingItem = cart.find(item => item.name === productName && item.category === categoryId);

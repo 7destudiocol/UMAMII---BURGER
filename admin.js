@@ -9,7 +9,10 @@ let _supabase = null;
 let currentFilter = 'day';
 let cart = {};           // { productName: { qty, price } }
 let currentSalesCat = 'all';
-let currentDashCat = 'all';
+let currentDashCat  = 'all';
+let currentProdCat  = 'all';
+let salesSearchQuery = '';
+let _productsCache  = [];
 
 // ============================================================
 // INIT
@@ -36,8 +39,6 @@ async function initDashboard() {
     await syncMenuWithDB();
     loadStats();
     initSalesCart();
-    renderDashboardProducts('all');
-    renderDashCatFilters();
 }
 
 // ============================================================
@@ -403,10 +404,20 @@ function filterSalesCart(catId, btn) {
     renderSalesGrid(catId);
 }
 
+function filterSalesBySearch(query) {
+    salesSearchQuery = query.toLowerCase();
+    renderSalesGrid(currentSalesCat);
+}
+
 function renderSalesGrid(catId) {
     const grid = document.getElementById('sales-product-grid');
     if (!grid) return;
-    const list = catId === 'all' ? menuData.products : menuData.products.filter(p => p.category === catId);
+    let list = catId === 'all' ? menuData.products : menuData.products.filter(p => p.category === catId);
+    
+    if (salesSearchQuery) {
+        list = list.filter(p => p.name.toLowerCase().includes(salesSearchQuery));
+    }
+
     grid.innerHTML = list.map(p => {
         const qty = cart[p.name]?.qty || 0;
         const imgSrc = p.image ? `assets/img/${p.image}` : `assets/img/Logo (2).webp`;
@@ -558,15 +569,19 @@ async function deleteExpenseRow(id) {
 }
 
 // ============================================================
-// PRODUCTS TABLE
+// PRODUCTS TABLE + VISUAL GRID
 // ============================================================
 async function loadProducts() {
     const { data } = await _supabase
         .from('UMAMII_products')
         .select('*')
         .order('category', { ascending: true });
+
+    _productsCache = data || [];
+
+    // Table
     const tbody = document.querySelector('#products-table tbody');
-    tbody.innerHTML = data?.map(p => {
+    tbody.innerHTML = _productsCache.map(p => {
         const imgSrc = p.image ? `assets/img/${p.image}` : `assets/img/Logo (2).webp`;
         return `
         <tr>
@@ -574,9 +589,76 @@ async function loadProducts() {
             <td><b>${p.name}</b></td>
             <td>${p.category}</td>
             <td class="primary">$${parseFloat(p.price).toLocaleString()}</td>
-            <td><button class="delete-btn" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i> Eliminar</button></td>
+            <td style="display:flex;gap:0.5rem">
+                <button class="action-btn detail-btn" onclick="openEditProductModal('${p.id}','${p.name.replace(/'/g,"\\'")}',${ p.price},'${p.category}','${p.image||''}','${(p.description||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')"><i class="fas fa-pen"></i> Editar</button>
+                <button class="delete-btn" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
+            </td>
         </tr>`;
     }).join('') || '<tr><td colspan="5" style="color:#888;text-align:center;padding:2rem">Sin productos</td></tr>';
+
+    // Visual grid
+    renderProductsCatFilters();
+    renderProductsVisualGrid(currentProdCat);
+}
+
+// Visual catalog in products tab
+function renderProductsCatFilters() {
+    const wrap = document.getElementById('products-cat-filters');
+    if (!wrap) return;
+    const cats = [...new Set(_productsCache.map(p => p.category))].sort();
+    wrap.innerHTML = `<button class="cat-filter-btn active" onclick="filterProductsGrid('all',this)">Todos</button>` +
+        cats.map(c =>
+            `<button class="cat-filter-btn" onclick="filterProductsGrid('${c}',this)">${c}</button>`
+        ).join('');
+}
+
+function filterProductsGrid(catId, btn) {
+    currentProdCat = catId;
+    document.querySelectorAll('#products-cat-filters .cat-filter-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderProductsVisualGrid(catId);
+}
+
+function renderProductsVisualGrid(catId) {
+    const grid = document.getElementById('products-visual-grid');
+    if (!grid) return;
+    const list = catId === 'all' ? _productsCache : _productsCache.filter(p => p.category === catId);
+    grid.innerHTML = list.map(p => {
+        const imgSrc = p.image ? `assets/img/${p.image}` : `assets/img/Logo (2).webp`;
+        const nameSafe = p.name.replace(/'/g, "\\'");
+        const imgSafe  = (p.image || '').replace(/'/g, "\\'");
+        const descSafe = (p.description || '').replace(/'/g, "\\'").replace(/\n/g, ' ');
+        return `
+        <div class="product-mini-card product-mini-editable">
+            <img src="${imgSrc}" class="product-mini-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}">
+            <div class="product-mini-info">
+                <span class="product-mini-cat">${p.category}</span>
+                <h4>${p.name}</h4>
+                <p class="product-mini-price">$${parseFloat(p.price).toLocaleString()}</p>
+            </div>
+            <div class="product-mini-actions">
+                <button class="edit-price-btn" onclick="openEditProductModal('${p.id}','${nameSafe}',${p.price},'${p.category}','${imgSafe}','${descSafe}')">
+                    <i class="fas fa-pen"></i> Editar precio
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function openEditProductModal(id, name, price, category, image, description) {
+    document.getElementById('modal-title').innerText = 'Editar Producto';
+    const fields = document.getElementById('dynamic-fields');
+    document.getElementById('modal-container').classList.remove('hidden');
+    const cats = [...new Set(_productsCache.map(p => p.category))].sort();
+    fields.innerHTML = `
+        <input type="hidden" id="prod-edit-id" value="${id}">
+        <input type="text" id="prod-name" value="${name}" placeholder="Nombre del producto" required>
+        <select id="prod-cat" required>
+            ${cats.map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${c}</option>`).join('')}
+        </select>
+        <input type="number" id="prod-price" value="${price}" placeholder="Precio" required>
+        <input type="text" id="prod-img" value="${image}" placeholder="Nombre de imagen (opcional)">
+        <textarea id="prod-desc" placeholder="Descripción de ingredientes" style="width:100%;margin-top:1rem;padding:1rem;border-radius:10px;background:var(--glass-bg);color:white;border:1px solid var(--glass-border);min-height:80px;">${description}</textarea>`;
 }
 
 async function deleteProduct(id) {
@@ -597,13 +679,37 @@ async function openModal(type) {
         fields.innerHTML = `
             <input type="text" id="exp-desc" placeholder="Descripción" required>
             <select id="exp-cat" required>
-                <option value="Insumos">Compra de Insumos</option>
+                <option value="Insumos">Insumos</option>
                 <option value="Servicios">Servicios Públicos</option>
                 <option value="Arriendo">Arriendo</option>
+                <option value="Personal">Personal</option>
                 <option value="Administrativo">Administrativo</option>
                 <option value="Otros">Otros</option>
             </select>
             <input type="number" id="exp-amount" placeholder="Monto" required>`;
+    } else if (type === 'income') {
+        document.getElementById('modal-title').innerText = 'Registrar Otro Ingreso';
+        fields.innerHTML = `
+            <input type="text" id="inc-desc" placeholder="Descripción" required>
+            <input type="number" id="inc-amount" placeholder="Monto" required>`;
+    } else if (type === 'product') {
+        document.getElementById('modal-title').innerText = 'Nuevo Producto';
+        const catOptions = [
+            { id: 'hamburguesas', name: 'Hamburguesas' },
+            { id: 'perros',       name: 'Perros' },
+            { id: 'sandwiches',   name: 'Sándwiches' },
+            { id: 'salchipapas',  name: 'Salchipapas' },
+            { id: 'adiciones',    name: 'Adiciones' },
+            { id: 'bebidas',      name: 'Bebidas' },
+        ];
+        fields.innerHTML = `
+            <input type="text" id="prod-name" placeholder="Nombre del producto" required>
+            <select id="prod-cat" required>
+                ${catOptions.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+            </select>
+            <input type="number" id="prod-price" placeholder="Precio" required>
+            <input type="text" id="prod-img" placeholder="Nombre de imagen (ej: HAMBURGUESA TRADI.webp)">
+            <textarea id="prod-desc" placeholder="Descripción de ingredientes" style="width:100%; margin-top:1rem; padding:1rem; border-radius:10px; background:var(--glass-bg); color:white; border:1px solid var(--glass-border); min-height:100px;"></textarea>`;
     }
 }
 
@@ -616,10 +722,30 @@ document.getElementById('admin-form').addEventListener('submit', async (e) => {
             category: document.getElementById('exp-cat').value,
             amount: parseFloat(document.getElementById('exp-amount').value)
         }]);
+        loadExpenses();
+    } else if (title.includes('Ingreso')) {
+        await _supabase.from('UMAMII_other_income').insert([{
+            description: document.getElementById('inc-desc').value,
+            amount: parseFloat(document.getElementById('inc-amount').value)
+        }]);
+    } else if (title.includes('Producto')) {
+        const editId = document.getElementById('prod-edit-id')?.value;
+        const prodData = {
+            name:        document.getElementById('prod-name').value,
+            category:    document.getElementById('prod-cat').value,
+            price:       parseFloat(document.getElementById('prod-price').value),
+            image:       document.getElementById('prod-img').value || null,
+            description: document.getElementById('prod-desc').value || null
+        };
+        if (editId) {
+            await _supabase.from('UMAMII_products').update(prodData).eq('id', editId);
+        } else {
+            await _supabase.from('UMAMII_products').insert([prodData]);
+        }
+        loadProducts();
     }
     closeModal();
     loadStats();
-    if (title.includes('Gasto')) loadExpenses();
 });
 
 function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
