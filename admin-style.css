@@ -1182,10 +1182,11 @@ th {
     .cart-summary-box { position: static; border-radius: 16px; }
     .cart-items-list { max-height: unset; min-height: 60px; }
     .sales-grid { max-height: unset; }
-    .pos-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; padding: 0.75rem; }
-    .pos-img { height: 100px; }
-    .pos-info { padding: 0.65rem; }
-    .pos-info h4 { font-size: 0.82rem; }
+    .pos-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; padding: 0.5rem; }
+    .pos-card { overflow: hidden; }
+    .pos-img { width: 100%; height: auto; max-height: 110px; min-height: 70px; object-fit: cover; display: block; }
+    .pos-info { padding: 0.55rem; }
+    .pos-info h4 { font-size: 0.78rem; }
     .pos-price { font-size: 0.9rem; }
     .pos-controls { gap: 0.65rem; padding: 0 0.65rem 0.75rem; margin-top: 0.5rem; }
     .qty-btn { width: 32px; height: 32px; font-size: 1rem; }

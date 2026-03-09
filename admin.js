@@ -183,13 +183,16 @@ async function openMonthDetail(monthStr, monthName) {
     const monthEnd = new Date(monthStr);
     monthEnd.setUTCMonth(monthEnd.getUTCMonth() + 1); monthEnd.setUTCDate(1);
 
-    const [{ data: sales }, { data: expenses }] = await Promise.all([
+    const [{ data: sales }, { data: expenses }, { data: otherIncome }] = await Promise.all([
         _supabase.from('umamii_sales').select('*, products:umamii_products(name)')
             .gte('sale_date', monthStart.toISOString()).lt('sale_date', monthEnd.toISOString())
             .order('sale_date', { ascending: false }),
         _supabase.from('umamii_expenses').select('*')
             .gte('expense_date', monthStart.toISOString()).lt('expense_date', monthEnd.toISOString())
-            .order('expense_date', { ascending: false })
+            .order('expense_date', { ascending: false }),
+        _supabase.from('umamii_other_income').select('*')
+            .gte('income_date', monthStart.toISOString()).lt('income_date', monthEnd.toISOString())
+            .order('income_date', { ascending: false })
     ]);
 
     const salesRows = (sales || []).map(s => `
@@ -210,6 +213,14 @@ async function openMonthDetail(monthStr, monthName) {
             <td><button class="delete-btn" onclick="deleteExpenseFromModal('${e.id}', '${monthStr}', '${monthName}')"><i class="fas fa-trash"></i></button></td>
         </tr>`).join('') || '<tr><td colspan="5" style="color:#888;text-align:center">Sin gastos</td></tr>';
 
+    const otherRows = (otherIncome || []).map(o => `
+        <tr>
+            <td>${new Date(o.income_date).toLocaleDateString()}</td>
+            <td>${o.description}</td>
+            <td class="success">$${parseFloat(o.amount).toLocaleString()}</td>
+            <td><button class="delete-btn" onclick="deleteOtherIncomeFromModal('${o.id}', '${monthStr}', '${monthName}')"><i class="fas fa-trash"></i></button></td>
+        </tr>`).join('') || '<tr><td colspan="4" style="color:#888;text-align:center">Sin otros ingresos</td></tr>';
+
     content.innerHTML = `
         <div class="detail-section">
             <h4 class="detail-label success-label"><i class="fas fa-arrow-up"></i> Ventas del mes</h4>
@@ -217,6 +228,15 @@ async function openMonthDetail(monthStr, monthName) {
                 <table>
                     <thead><tr><th>Fecha</th><th>Producto</th><th>Cant.</th><th>Total</th><th></th></tr></thead>
                     <tbody>${salesRows}</tbody>
+                </table>
+            </div>
+        </div>
+        <div class="detail-section mt-2">
+            <h4 class="detail-label" style="color:var(--primary)"><i class="fas fa-plus-circle"></i> Otros ingresos del mes</h4>
+            <div class="scroll-table">
+                <table>
+                    <thead><tr><th>Fecha</th><th>Descripción</th><th>Monto</th><th></th></tr></thead>
+                    <tbody>${otherRows}</tbody>
                 </table>
             </div>
         </div>
@@ -246,6 +266,13 @@ async function deleteSale(id, monthStr, monthName) {
 async function deleteExpenseFromModal(id, monthStr, monthName) {
     if (!confirm('¿Eliminar este gasto?')) return;
     await _supabase.from('umamii_expenses').delete().eq('id', id);
+    openMonthDetail(monthStr, monthName);
+    loadStats();
+}
+
+async function deleteOtherIncomeFromModal(id, monthStr, monthName) {
+    if (!confirm('¿Eliminar este ingreso?')) return;
+    await _supabase.from('umamii_other_income').delete().eq('id', id);
     openMonthDetail(monthStr, monthName);
     loadStats();
 }
@@ -843,7 +870,8 @@ document.getElementById('admin-form').addEventListener('submit', async (e) => {
     } else if (title.includes('Ingreso')) {
         await _supabase.from('umamii_other_income').insert([{
             description: document.getElementById('inc-desc').value,
-            amount: parseFloat(document.getElementById('inc-amount').value)
+            amount: parseFloat(document.getElementById('inc-amount').value),
+            income_date: new Date().toISOString()
         }]);
     } else if (title.includes('Producto')) {
         const editId = document.getElementById('prod-edit-id')?.value;
