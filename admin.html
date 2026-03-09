@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Umami Burger | Admin Dashboard</title>
+    <link rel="stylesheet" href="admin-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="overlay">
+        <div class="login-box">
+            <img src="assets/logo.webp" alt="Umami Logo" class="login-logo">
+            <h1>Acceso Restringido</h1>
+            <p>Ingresa la contraseña para acceder al panel de contabilidad.</p>
+            <input type="password" id="admin-pass" placeholder="Contraseña">
+            <button onclick="checkAdminPassword()">Entrar</button>
+            <p id="login-error" class="error-msg"></p>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="admin-dashboard" class="dashboard hidden">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <img src="assets/logo.webp" alt="Logo" class="mini-logo">
+                <span>Admin Umami</span>
+            </div>
+            <ul class="nav-links">
+                <li class="active" onclick="showTab('stats')">Resumen</li>
+                <li onclick="showTab('sales')">Ventas</li>
+                <li onclick="showTab('expenses')">Gastos</li>
+                <li onclick="showTab('products')">Productos</li>
+            </ul>
+            <div class="sidebar-footer">
+                <button onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </nav>
+
+        <main class="content">
+            <!-- Summary Tab -->
+            <section id="tab-stats" class="tab-content active">
+                <header>
+                    <h2>Resumen de Flujo de Caja</h2>
+                    <button class="export-btn" onclick="exportDataToCSV()">Descargar CSV</button>
+                </header>
+                
+                <div class="stats-grid">
+                    <div class="stat-card income">
+                        <h3>Ingresos Totales</h3>
+                        <p id="total-income-val">$0</p>
+                    </div>
+                    <div class="stat-card expense">
+                        <h3>Gastos Totales</h3>
+                        <p id="total-expenses-val">$0</p>
+                    </div>
+                    <div class="stat-card flow">
+                        <h3>Flujo de Caja</h3>
+                        <p id="cash-flow-val">$0</p>
+                    </div>
+                </div>
+
+                <div class="charts-section">
+                    <div class="chart-container">
+                        <h3>Productos Más Vendidos</h3>
+                        <canvas id="topProductsChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sales Tab -->
+            <section id="tab-sales" class="tab-content hidden">
+                <header>
+                    <h2>Registro de Ventas</h2>
+                    <button class="add-btn" onclick="openModal('sale')">+ Nueva Venta</button>
+                </header>
+                <div class="table-container">
+                    <table id="sales-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Producto</th>
+                                <th>Cant.</th>
+                                <th>Total</th>
+                                <th>Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Expenses Tab -->
+            <section id="tab-expenses" class="tab-content hidden">
+                <header>
+                    <h2>Registro de Gastos</h2>
+                    <button class="add-btn" onclick="openModal('expense')">+ Nuevo Gasto</button>
+                </header>
+                <div class="table-container">
+                    <table id="expenses-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Descripción</th>
+                                <th>Categoría</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Products Tab -->
+            <section id="tab-products" class="tab-content hidden">
+                <header>
+                    <h2>Gestión de Productos</h2>
+                    <button class="add-btn" onclick="openModal('product')">+ Nuevo Producto</button>
+                </header>
+                <div class="table-container">
+                    <table id="products-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container" class="modal-overlay hidden">
+        <div class="modal">
+            <h2 id="modal-title">Nueva Entrada</h2>
+            <form id="admin-form">
+                <div id="dynamic-fields"></div>
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="save-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
