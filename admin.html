@@ -209,6 +209,14 @@
                             <button class="clear-cart-btn" onclick="clearCart()">
                                 <i class="fas fa-trash-alt"></i> Limpiar
                             </button>
+                            <button class="custom-item-btn" onclick="toggleCustomItemForm()">
+                                <i class="fas fa-tag"></i> + Ítem personalizado
+                            </button>
+                            <div id="custom-item-form" class="custom-item-form hidden">
+                                <input type="text" id="custom-item-name" placeholder="Ej: Domicilio, descuento...">
+                                <input type="text" id="custom-item-price" placeholder="Precio" oninput="formatCOPInput(this)">
+                                <button type="button" onclick="addCustomItemToCart()"><i class="fas fa-plus"></i> Agregar</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -285,6 +293,10 @@
 
                 <!-- Visual Catalog -->
                 <div class="monthly-table-container" style="margin-bottom:1.5rem">
+                    <div class="search-container" style="margin-bottom:1rem">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="products-search" placeholder="Buscar producto..." oninput="filterProductsBySearch(this.value)">
+                    </div>
                     <div class="table-section-header">
                         <h3><i class="fas fa-th-large"></i> Catálogo Visual</h3>
                         <div id="products-cat-filters" class="dash-cat-filters"></div>

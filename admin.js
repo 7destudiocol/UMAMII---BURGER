@@ -8,6 +8,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let _supabase = null;
 let currentFilter = 'day';
 let cart = {};           // { productName: { qty, price } }
+let productsSearchQuery = '';
 let currentSalesCat = 'all';
 let currentDashCat  = 'all';
 let currentProdCat  = 'all';
@@ -179,7 +180,7 @@ async function openMonthDetail(monthStr, monthName) {
     const salesRows = (sales || []).map(s => `
         <tr>
             <td>${new Date(s.sale_date).toLocaleDateString()}</td>
-            <td>${s.products?.name || 'Varios'}</td>
+            <td>${s.products?.name || s.notes || 'Personalizado'}</td>
             <td>${s.quantity}</td>
             <td class="success">$${parseFloat(s.total_price).toLocaleString()}</td>
             <td><button class="delete-btn" onclick="deleteSale('${s.id}', '${monthStr}', '${monthName}')"><i class="fas fa-trash"></i></button></td>
@@ -470,12 +471,13 @@ function renderCartSummary() {
 
     let total = 0;
     list.innerHTML = entries.map(([name, v]) => {
+        const displayName = v.label || name;
         const subtotal = v.price * v.qty;
         total += subtotal;
         return `
         <div class="cart-item-row">
             <div class="cart-item-info">
-                <span class="cart-item-name">${name}</span>
+                <span class="cart-item-name">${displayName}</span>
                 <span class="cart-item-qty">×${v.qty}</span>
             </div>
             <div class="cart-item-right">
@@ -493,15 +495,41 @@ function clearCart() {
     renderCartSummary();
 }
 
+function toggleCustomItemForm() {
+    const form = document.getElementById('custom-item-form');
+    form.classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) {
+        document.getElementById('custom-item-name').value = '';
+        document.getElementById('custom-item-price').value = '';
+        document.getElementById('custom-item-name').focus();
+    }
+}
+
+function addCustomItemToCart() {
+    const name  = document.getElementById('custom-item-name').value.trim();
+    const price = parseCOPInput(document.getElementById('custom-item-price').value);
+    if (!name)  { alert('Ingresa un nombre para el ítem'); return; }
+    if (!price) { alert('Ingresa un precio válido'); return; }
+    const key = `__custom__${name}`;
+    if (!cart[key]) cart[key] = { qty: 0, price, isCustom: true, label: name };
+    cart[key].qty += 1;
+    toggleCustomItemForm();
+    renderCartSummary();
+}
+
 async function submitCartSale() {
     const entries = Object.entries(cart).filter(([, v]) => v.qty > 0);
     if (!entries.length) { alert('Agrega productos al pedido'); return; }
 
     const salesInsert = [];
     for (const [name, v] of entries) {
-        const { data: dbProd } = await _supabase.from('umamii_products').select('id').eq('name', name).single();
-        if (dbProd) {
-            salesInsert.push({ product_id: dbProd.id, quantity: v.qty, total_price: v.price * v.qty, notes: 'Venta Carrito' });
+        if (v.isCustom) {
+            salesInsert.push({ product_id: null, quantity: v.qty, total_price: v.price * v.qty, notes: v.label || name });
+        } else {
+            const { data: dbProd } = await _supabase.from('umamii_products').select('id').eq('name', name).single();
+            if (dbProd) {
+                salesInsert.push({ product_id: dbProd.id, quantity: v.qty, total_price: v.price * v.qty, notes: 'Venta Carrito' });
+            }
         }
     }
 
@@ -509,7 +537,8 @@ async function submitCartSale() {
     const { error } = await _supabase.from('umamii_sales').insert(salesInsert);
     if (error) { alert('Error al guardar: ' + error.message); return; }
 
-    alert(`✅ Venta registrada — ${salesInsert.length} producto(s)`);
+    const total = entries.reduce((a, [, v]) => a + v.price * v.qty, 0);
+    alert(`✅ Venta registrada — ${salesInsert.length} ítem(s) — ${formatCOP(total)}`);
     clearCart();
     loadSales();
     loadStats();
@@ -527,7 +556,7 @@ async function loadSales() {
     tbody.innerHTML = data?.map(s => `
         <tr>
             <td>${new Date(s.sale_date).toLocaleDateString()}</td>
-            <td>${s.products?.name || 'Varios'}</td>
+            <td>${s.products?.name || s.notes || 'Personalizado'}</td>
             <td>${s.quantity}</td>
             <td class="success">$${parseFloat(s.total_price).toLocaleString()}</td>
             <td>${s.notes || ''}</td>
@@ -575,6 +604,15 @@ async function deleteExpenseRow(id) {
 const formatCOP = (price) =>
     new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(price);
 
+// COP input mask helpers
+function formatCOPInput(el) {
+    const raw = el.value.replace(/\D/g, '');
+    el.value = raw ? new Intl.NumberFormat('es-CO').format(parseInt(raw, 10)) : '';
+}
+function parseCOPInput(val) {
+    return parseInt((val || '0').replace(/\D/g, ''), 10) || 0;
+}
+
 async function loadProducts() {
     const { data } = await _supabase
         .from('umamii_products')
@@ -606,6 +644,25 @@ async function loadProducts() {
     renderProductsVisualGrid(currentProdCat);
 }
 
+function renderProductsTable(list) {
+    const tbody = document.querySelector('#products-table tbody');
+    if (!tbody) return;
+    tbody.innerHTML = list.map(p => {
+        const imgSrc = p.image ? `assets/img/${p.image}` : `assets/img/Logo (2).webp`;
+        return `
+        <tr>
+            <td><img src="${imgSrc}" class="product-table-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}"></td>
+            <td><b>${p.name}</b></td>
+            <td>${catLabel(p.category)}</td>
+            <td class="primary">${formatCOP(p.price)}</td>
+            <td style="display:flex;gap:0.5rem">
+                <button class="action-btn detail-btn" onclick="openEditProductModal('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price},'${p.category}','${p.image||''}','${(p.description||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')"><i class="fas fa-pen"></i> Editar</button>
+                <button class="delete-btn" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="5" style="color:#888;text-align:center;padding:2rem">Sin productos</td></tr>';
+}
+
 // Visual catalog in products tab
 const CAT_DISPLAY = {
     hamburguesas: 'Hamburguesas', perros: 'Perros', sandwiches: 'Sándwiches',
@@ -630,10 +687,22 @@ function filterProductsGrid(catId, btn) {
     renderProductsVisualGrid(catId);
 }
 
+function filterProductsBySearch(query) {
+    productsSearchQuery = query.toLowerCase();
+    renderProductsVisualGrid(currentProdCat);
+    const filtered = productsSearchQuery
+        ? _productsCache.filter(p => p.name.toLowerCase().includes(productsSearchQuery))
+        : _productsCache;
+    renderProductsTable(filtered);
+}
+
 function renderProductsVisualGrid(catId) {
     const grid = document.getElementById('products-visual-grid');
     if (!grid) return;
-    const list = catId === 'all' ? _productsCache : _productsCache.filter(p => p.category === catId);
+    let list = catId === 'all' ? _productsCache : _productsCache.filter(p => p.category === catId);
+    if (productsSearchQuery) {
+        list = list.filter(p => p.name.toLowerCase().includes(productsSearchQuery));
+    }
     grid.innerHTML = list.map(p => {
         const imgSrc = p.image ? `assets/img/${p.image}` : `assets/img/Logo (2).webp`;
         const nameSafe = p.name.replace(/'/g, "\\'");
@@ -667,7 +736,7 @@ function openEditProductModal(id, name, price, category, image, description) {
         <select id="prod-cat" required>
             ${cats.map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${catLabel(c)}</option>`).join('')}
         </select>
-        <input type="number" id="prod-price" value="${price}" placeholder="Precio" required>
+        <input type="text" id="prod-price" value="${new Intl.NumberFormat('es-CO').format(price)}" placeholder="Precio" oninput="formatCOPInput(this)" required>
         <input type="text" id="prod-img" value="${image}" placeholder="Nombre de imagen (opcional)">
         <textarea id="prod-desc" placeholder="Descripción de ingredientes" style="width:100%;margin-top:1rem;padding:1rem;border-radius:10px;background:var(--glass-bg);color:white;border:1px solid var(--glass-border);min-height:80px;">${description}</textarea>`;
 }
@@ -718,7 +787,7 @@ async function openModal(type) {
             <select id="prod-cat" required>
                 ${catOptions.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
             </select>
-            <input type="number" id="prod-price" placeholder="Precio" required>
+            <input type="text" id="prod-price" placeholder="Precio" oninput="formatCOPInput(this)" required>
             <input type="text" id="prod-img" placeholder="Nombre de imagen (ej: HAMBURGUESA TRADI.webp)">
             <textarea id="prod-desc" placeholder="Descripción de ingredientes" style="width:100%; margin-top:1rem; padding:1rem; border-radius:10px; background:var(--glass-bg); color:white; border:1px solid var(--glass-border); min-height:100px;"></textarea>`;
     }
@@ -744,7 +813,7 @@ document.getElementById('admin-form').addEventListener('submit', async (e) => {
         const prodData = {
             name:        document.getElementById('prod-name').value,
             category:    document.getElementById('prod-cat').value,
-            price:       parseFloat(document.getElementById('prod-price').value),
+            price:       parseCOPInput(document.getElementById('prod-price').value),
             image:       document.getElementById('prod-img').value || null,
             description: document.getElementById('prod-desc').value || null
         };
