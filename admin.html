@@ -108,10 +108,16 @@
                 <!-- Expense Breakdown by Category -->
                 <div id="expense-breakdown-section" class="expense-breakdown-section hidden">
                     <div class="chart-header">
-                        <h3><i class="fas fa-tags"></i> Gastos por Categoría</h3>
+                        <h3><i class="fas fa-chart-pie"></i> Gastos por Categoría</h3>
                         <span class="stat-meta" id="expense-breakdown-subtitle">Período seleccionado</span>
                     </div>
-                    <div id="expense-breakdown-list" class="expense-breakdown-list"></div>
+                    <div class="expense-cat-chart-layout">
+                        <div class="expense-cat-donut-wrap">
+                            <canvas id="expenseCatChart"></canvas>
+                            <div id="expense-cat-center" class="expense-cat-center"></div>
+                        </div>
+                        <div id="expense-breakdown-list" class="expense-breakdown-list"></div>
+                    </div>
                 </div>
 
                 <!-- Charts Row -->

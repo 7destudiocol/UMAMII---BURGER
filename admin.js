@@ -114,12 +114,21 @@ async function loadStats() {
 // DASHBOARD — EXPENSE BREAKDOWN BY CATEGORY
 // ============================================================
 const EXPENSE_CAT_COLORS = {
-    'Insumos':       '#ff6b6b',
-    'Servicios':     '#feca57',
-    'Arriendo':      '#ff9f43',
-    'Personal':      '#48dbfb',
-    'Administrativo':'#a29bfe',
-    'Otros':         '#636e72'
+    'Insumos':          '#ff6b6b',
+    'Servicios':        '#feca57',
+    'Arriendo':         '#ff9f43',
+    'Personal':         '#48dbfb',
+    'Administrativo':   '#a29bfe',
+    'Otros':            '#636e72'
+};
+
+const EXPENSE_CAT_LABELS = {
+    'Insumos':          'Insumos',
+    'Servicios':        'Servicios Públicos',
+    'Arriendo':         'Arriendo',
+    'Personal':         'Personal',
+    'Administrativo':   'Administrativo',
+    'Otros':            'Otros'
 };
 
 function renderExpenseBreakdown(expenses) {
@@ -128,6 +137,7 @@ function renderExpenseBreakdown(expenses) {
 
     if (!expenses || expenses.length === 0) {
         section.classList.add('hidden');
+        if (window.expenseCatChart) { window.expenseCatChart.destroy(); window.expenseCatChart = null; }
         return;
     }
     section.classList.remove('hidden');
@@ -143,14 +153,62 @@ function renderExpenseBreakdown(expenses) {
     const total = Object.values(grouped).reduce((a, b) => a + b, 0);
     const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
 
+    // ── Donut chart ──
+    const canvas = document.getElementById('expenseCatChart');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (window.expenseCatChart) window.expenseCatChart.destroy();
+        const chartLabels = sorted.map(([cat]) => EXPENSE_CAT_LABELS[cat] || cat);
+        const chartValues = sorted.map(([, amt]) => amt);
+        const chartColors = sorted.map(([cat]) => EXPENSE_CAT_COLORS[cat] || '#888');
+
+        window.expenseCatChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    data: chartValues,
+                    backgroundColor: chartColors,
+                    borderColor: '#1a1a1a',
+                    borderWidth: 3,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                                return ` $${ctx.parsed.toLocaleString()} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Center label: total
+        const center = document.getElementById('expense-cat-center');
+        if (center) {
+            center.innerHTML = `<span class="exp-center-label">Total</span><span class="exp-center-amount">$${total.toLocaleString()}</span>`;
+        }
+    }
+
+    // ── Breakdown list ──
     document.getElementById('expense-breakdown-list').innerHTML = sorted.map(([cat, amount]) => {
         const pct = total > 0 ? ((amount / total) * 100).toFixed(1) : 0;
         const color = EXPENSE_CAT_COLORS[cat] || '#888';
+        const label = EXPENSE_CAT_LABELS[cat] || cat;
         return `
         <div class="exp-breakdown-row">
             <div class="exp-breakdown-left">
                 <span class="exp-breakdown-dot" style="background:${color}"></span>
-                <span class="exp-breakdown-cat">${cat}</span>
+                <span class="exp-breakdown-cat">${label}</span>
             </div>
             <div class="exp-breakdown-bar-wrap">
                 <div class="exp-breakdown-bar" style="width:${pct}%;background:${color}80"></div>

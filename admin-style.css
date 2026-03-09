@@ -1828,11 +1828,64 @@ th {
     margin: 0 0 2rem;
 }
 
+/* ─── Chart + list side-by-side layout ─── */
+.expense-cat-chart-layout {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    margin-top: 1.2rem;
+}
+
+.expense-cat-donut-wrap {
+    position: relative;
+    width: 220px;
+    min-width: 180px;
+    height: 220px;
+    flex-shrink: 0;
+}
+
+.expense-cat-donut-wrap canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Center text overlay */
+.expense-cat-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+}
+
+.exp-center-label {
+    font-size: 0.7rem;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.exp-center-amount {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-white);
+    white-space: nowrap;
+}
+
+/* List fills remaining space */
+.expense-cat-chart-layout .expense-breakdown-list {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ─── Row styles ─── */
 .expense-breakdown-list {
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
-    margin-top: 0.5rem;
 }
 
 .exp-breakdown-row {
@@ -1892,9 +1945,17 @@ th {
     white-space: nowrap;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
+    .expense-cat-chart-layout {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .expense-cat-donut-wrap {
+        width: 180px;
+        height: 180px;
+    }
     .exp-breakdown-row {
-        grid-template-columns: 120px 1fr 44px 90px;
+        grid-template-columns: 130px 1fr 44px 90px;
         gap: 0.5rem;
     }
 }
