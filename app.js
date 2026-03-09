@@ -132,11 +132,21 @@ async function initApp() {
                 loaderWrapper.style.opacity = '0';
                 setTimeout(() => {
                     loaderWrapper.style.visibility = 'hidden';
+                    loaderWrapper.style.display = 'none';
                 }, 500);
             }
         }, 1000);
     }
 }
+
+// Safety fallback: force-hide loader after 8s in case of slow network
+setTimeout(() => {
+    if (loaderWrapper) {
+        loaderWrapper.style.opacity = '0';
+        loaderWrapper.style.visibility = 'hidden';
+        loaderWrapper.style.display = 'none';
+    }
+}, 8000);
 
 // Render Categories
 function renderCategories() {
