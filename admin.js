@@ -70,9 +70,9 @@ async function loadStats() {
     const startDate = getDateRange();
 
     const [{ data: sales }, { data: others }, { data: expenses }] = await Promise.all([
-        _supabase.from('UMAMII_sales').select('*, products:UMAMII_products(name)').gte('sale_date', startDate),
-        _supabase.from('UMAMII_other_income').select('*').gte('income_date', startDate),
-        _supabase.from('UMAMII_expenses').select('*').gte('expense_date', startDate)
+        _supabase.from('umamii_sales').select('*, products:umamii_products(name)').gte('sale_date', startDate),
+        _supabase.from('umamii_other_income').select('*').gte('income_date', startDate),
+        _supabase.from('umamii_expenses').select('*').gte('expense_date', startDate)
     ]);
 
     const totalSales    = sales   ? sales.reduce((a, s) => a + parseFloat(s.total_price), 0) : 0;
@@ -94,7 +94,7 @@ async function loadStats() {
 // DASHBOARD — MONTHLY FLOW
 // ============================================================
 async function loadMonthlyFlow() {
-    const { data: monthlyData } = await _supabase.from('UMAMII_monthly_cash_flow').select('*');
+    const { data: monthlyData } = await _supabase.from('umamii_monthly_cash_flow').select('*');
     if (!monthlyData) return;
     renderMainChart(monthlyData);
     renderMonthlyTable(monthlyData);
@@ -168,10 +168,10 @@ async function openMonthDetail(monthStr, monthName) {
     monthEnd.setUTCMonth(monthEnd.getUTCMonth() + 1); monthEnd.setUTCDate(1);
 
     const [{ data: sales }, { data: expenses }] = await Promise.all([
-        _supabase.from('UMAMII_sales').select('*, products:UMAMII_products(name)')
+        _supabase.from('umamii_sales').select('*, products:umamii_products(name)')
             .gte('sale_date', monthStart.toISOString()).lt('sale_date', monthEnd.toISOString())
             .order('sale_date', { ascending: false }),
-        _supabase.from('UMAMII_expenses').select('*')
+        _supabase.from('umamii_expenses').select('*')
             .gte('expense_date', monthStart.toISOString()).lt('expense_date', monthEnd.toISOString())
             .order('expense_date', { ascending: false })
     ]);
@@ -222,14 +222,14 @@ function closeMonthDetail() {
 
 async function deleteSale(id, monthStr, monthName) {
     if (!confirm('¿Eliminar esta venta?')) return;
-    await _supabase.from('UMAMII_sales').delete().eq('id', id);
+    await _supabase.from('umamii_sales').delete().eq('id', id);
     openMonthDetail(monthStr, monthName);
     loadStats();
 }
 
 async function deleteExpenseFromModal(id, monthStr, monthName) {
     if (!confirm('¿Eliminar este gasto?')) return;
-    await _supabase.from('UMAMII_expenses').delete().eq('id', id);
+    await _supabase.from('umamii_expenses').delete().eq('id', id);
     openMonthDetail(monthStr, monthName);
     loadStats();
 }
@@ -239,8 +239,8 @@ async function deleteExpenseFromModal(id, monthStr, monthName) {
 // ============================================================
 async function loadTopProducts() {
     const { data: sales } = await _supabase
-        .from('UMAMII_sales')
-        .select('quantity, products:UMAMII_products(name)');
+        .from('umamii_sales')
+        .select('quantity, products:umamii_products(name)');
 
     if (!sales || sales.length === 0) {
         renderDonutChart([]);
@@ -499,14 +499,14 @@ async function submitCartSale() {
 
     const salesInsert = [];
     for (const [name, v] of entries) {
-        const { data: dbProd } = await _supabase.from('UMAMII_products').select('id').eq('name', name).single();
+        const { data: dbProd } = await _supabase.from('umamii_products').select('id').eq('name', name).single();
         if (dbProd) {
             salesInsert.push({ product_id: dbProd.id, quantity: v.qty, total_price: v.price * v.qty, notes: 'Venta Carrito' });
         }
     }
 
     if (salesInsert.length === 0) { alert('No se encontraron productos en la BD'); return; }
-    const { error } = await _supabase.from('UMAMII_sales').insert(salesInsert);
+    const { error } = await _supabase.from('umamii_sales').insert(salesInsert);
     if (error) { alert('Error al guardar: ' + error.message); return; }
 
     alert(`✅ Venta registrada — ${salesInsert.length} producto(s)`);
@@ -520,8 +520,8 @@ async function submitCartSale() {
 // ============================================================
 async function loadSales() {
     const { data } = await _supabase
-        .from('UMAMII_sales')
-        .select('*, products:UMAMII_products(name)')
+        .from('umamii_sales')
+        .select('*, products:umamii_products(name)')
         .order('sale_date', { ascending: false });
     const tbody = document.querySelector('#sales-table tbody');
     tbody.innerHTML = data?.map(s => `
@@ -537,7 +537,7 @@ async function loadSales() {
 
 async function deleteSaleRow(id) {
     if (!confirm('¿Eliminar esta venta?')) return;
-    await _supabase.from('UMAMII_sales').delete().eq('id', id);
+    await _supabase.from('umamii_sales').delete().eq('id', id);
     loadSales();
     loadStats();
 }
@@ -547,7 +547,7 @@ async function deleteSaleRow(id) {
 // ============================================================
 async function loadExpenses() {
     const { data } = await _supabase
-        .from('UMAMII_expenses')
+        .from('umamii_expenses')
         .select('*')
         .order('expense_date', { ascending: false });
     const tbody = document.querySelector('#expenses-table tbody');
@@ -563,7 +563,7 @@ async function loadExpenses() {
 
 async function deleteExpenseRow(id) {
     if (!confirm('¿Eliminar este gasto?')) return;
-    await _supabase.from('UMAMII_expenses').delete().eq('id', id);
+    await _supabase.from('umamii_expenses').delete().eq('id', id);
     loadExpenses();
     loadStats();
 }
@@ -573,7 +573,7 @@ async function deleteExpenseRow(id) {
 // ============================================================
 async function loadProducts() {
     const { data } = await _supabase
-        .from('UMAMII_products')
+        .from('umamii_products')
         .select('*')
         .order('category', { ascending: true });
 
@@ -663,7 +663,7 @@ function openEditProductModal(id, name, price, category, image, description) {
 
 async function deleteProduct(id) {
     if (confirm('¿Eliminar producto?')) {
-        await _supabase.from('UMAMII_products').delete().eq('id', id);
+        await _supabase.from('umamii_products').delete().eq('id', id);
         loadProducts();
     }
 }
@@ -717,14 +717,14 @@ document.getElementById('admin-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = document.getElementById('modal-title').innerText;
     if (title.includes('Gasto')) {
-        await _supabase.from('UMAMII_expenses').insert([{
+        await _supabase.from('umamii_expenses').insert([{
             description: document.getElementById('exp-desc').value,
             category: document.getElementById('exp-cat').value,
             amount: parseFloat(document.getElementById('exp-amount').value)
         }]);
         loadExpenses();
     } else if (title.includes('Ingreso')) {
-        await _supabase.from('UMAMII_other_income').insert([{
+        await _supabase.from('umamii_other_income').insert([{
             description: document.getElementById('inc-desc').value,
             amount: parseFloat(document.getElementById('inc-amount').value)
         }]);
@@ -738,9 +738,9 @@ document.getElementById('admin-form').addEventListener('submit', async (e) => {
             description: document.getElementById('prod-desc').value || null
         };
         if (editId) {
-            await _supabase.from('UMAMII_products').update(prodData).eq('id', editId);
+            await _supabase.from('umamii_products').update(prodData).eq('id', editId);
         } else {
-            await _supabase.from('UMAMII_products').insert([prodData]);
+            await _supabase.from('umamii_products').insert([prodData]);
         }
         loadProducts();
     }
@@ -762,18 +762,18 @@ async function syncMenuWithDB() {
         image: p.image || null
     }));
     // Insert only new ones (avoid overwriting custom DB entries)
-    const { data: existing } = await _supabase.from('UMAMII_products').select('name, image');
+    const { data: existing } = await _supabase.from('umamii_products').select('name, image');
     const existingNames = new Set(existing?.map(p => p.name) || []);
     const newProducts = upsertData.filter(p => !existingNames.has(p.name));
     if (newProducts.length > 0) {
-        await _supabase.from('UMAMII_products').insert(newProducts);
+        await _supabase.from('umamii_products').insert(newProducts);
     }
     // Update image for products that have no image yet
     const noImageProducts = (existing || []).filter(p => !p.image);
     for (const ep of noImageProducts) {
         const menuItem = menuData.products.find(p => p.name === ep.name);
         if (menuItem?.image) {
-            await _supabase.from('UMAMII_products').update({ image: menuItem.image }).eq('name', ep.name);
+            await _supabase.from('umamii_products').update({ image: menuItem.image }).eq('name', ep.name);
         }
     }
 }
@@ -782,8 +782,8 @@ async function syncMenuWithDB() {
 // EXPORT CSV
 // ============================================================
 async function exportDataToCSV() {
-    const { data: sales }    = await _supabase.from('UMAMII_sales').select('*, products:UMAMII_products(name)').order('sale_date', { ascending: false });
-    const { data: expenses } = await _supabase.from('UMAMII_expenses').select('*').order('expense_date', { ascending: false });
+    const { data: sales }    = await _supabase.from('umamii_sales').select('*, products:umamii_products(name)').order('sale_date', { ascending: false });
+    const { data: expenses } = await _supabase.from('umamii_expenses').select('*').order('expense_date', { ascending: false });
 
     let csv = 'VENTAS\nFecha,Producto,Cantidad,Total,Notas\n';
     (sales || []).forEach(s => {
