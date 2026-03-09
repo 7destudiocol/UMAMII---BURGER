@@ -105,8 +105,60 @@ async function loadStats() {
     document.getElementById('cash-flow-val').innerText     = `$${(totalIncome - totalExpenses).toLocaleString()}`;
     document.getElementById('total-orders-val').innerText  = totalOrders;
 
+    renderExpenseBreakdown(expenses || []);
     loadMonthlyFlow();
     loadTopProducts();
+}
+
+// ============================================================
+// DASHBOARD — EXPENSE BREAKDOWN BY CATEGORY
+// ============================================================
+const EXPENSE_CAT_COLORS = {
+    'Insumos':       '#ff6b6b',
+    'Servicios':     '#feca57',
+    'Arriendo':      '#ff9f43',
+    'Personal':      '#48dbfb',
+    'Administrativo':'#a29bfe',
+    'Otros':         '#636e72'
+};
+
+function renderExpenseBreakdown(expenses) {
+    const section = document.getElementById('expense-breakdown-section');
+    if (!section) return;
+
+    if (!expenses || expenses.length === 0) {
+        section.classList.add('hidden');
+        return;
+    }
+    section.classList.remove('hidden');
+
+    // Group by category
+    const grouped = {};
+    expenses.forEach(e => {
+        const cat = e.category || 'Otros';
+        if (!grouped[cat]) grouped[cat] = 0;
+        grouped[cat] += parseFloat(e.amount) || 0;
+    });
+
+    const total = Object.values(grouped).reduce((a, b) => a + b, 0);
+    const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
+
+    document.getElementById('expense-breakdown-list').innerHTML = sorted.map(([cat, amount]) => {
+        const pct = total > 0 ? ((amount / total) * 100).toFixed(1) : 0;
+        const color = EXPENSE_CAT_COLORS[cat] || '#888';
+        return `
+        <div class="exp-breakdown-row">
+            <div class="exp-breakdown-left">
+                <span class="exp-breakdown-dot" style="background:${color}"></span>
+                <span class="exp-breakdown-cat">${cat}</span>
+            </div>
+            <div class="exp-breakdown-bar-wrap">
+                <div class="exp-breakdown-bar" style="width:${pct}%;background:${color}80"></div>
+            </div>
+            <span class="exp-breakdown-pct">${pct}%</span>
+            <span class="exp-breakdown-amount" style="color:${color}">$${amount.toLocaleString()}</span>
+        </div>`;
+    }).join('');
 }
 
 // ============================================================
@@ -689,27 +741,11 @@ async function loadProducts() {
         .select('*')
         .order('category', { ascending: true });
 
-    // Normalize categories to lowercase to avoid duplicates
-    _productsCache = (data || []).map(p => ({ ...p, category: (p.category || '').toLowerCase() }));
+    // Normalize categories to lowercase, preserve sold_out flag
+    _productsCache = (data || []).map(p => ({ ...p, category: (p.category || '').toLowerCase(), sold_out: !!p.sold_out }));
 
-    // Table
-    const tbody = document.querySelector('#products-table tbody');
-    tbody.innerHTML = _productsCache.map(p => {
-        const imgSrc = p.image ? `assets/img/${p.image}` : `assets/img/Logo (2).webp`;
-        return `
-        <tr>
-            <td><img src="${imgSrc}" class="product-table-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}"></td>
-            <td><b>${p.name}</b></td>
-            <td>${p.category}</td>
-            <td class="primary">${formatCOP(p.price)}</td>
-            <td style="display:flex;gap:0.5rem">
-                <button class="action-btn detail-btn" onclick="openEditProductModal('${p.id}','${p.name.replace(/'/g,"\\'")}',${ p.price},'${p.category}','${p.image||''}','${(p.description||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')"><i class="fas fa-pen"></i> Editar</button>
-                <button class="delete-btn" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
-            </td>
-        </tr>`;
-    }).join('') || '<tr><td colspan="5" style="color:#888;text-align:center;padding:2rem">Sin productos</td></tr>';
-
-    // Visual grid
+    // Table + Visual grid
+    renderProductsTable(_productsCache);
     renderProductsCatFilters();
     renderProductsVisualGrid(currentProdCat);
 }
@@ -719,14 +755,22 @@ function renderProductsTable(list) {
     if (!tbody) return;
     tbody.innerHTML = list.map(p => {
         const imgSrc = p.image ? `assets/img/${p.image}` : `assets/img/Logo (2).webp`;
+        const soldLabel = p.sold_out
+            ? `<span class="badge-agotado">Agotado</span>`
+            : `<span class="badge-disponible">Disponible</span>`;
         return `
-        <tr>
+        <tr class="${p.sold_out ? 'row-agotado' : ''}">
             <td><img src="${imgSrc}" class="product-table-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}"></td>
-            <td><b>${p.name}</b></td>
+            <td><b>${p.name}</b><br>${soldLabel}</td>
             <td>${catLabel(p.category)}</td>
             <td class="primary">${formatCOP(p.price)}</td>
-            <td style="display:flex;gap:0.5rem">
-                <button class="action-btn detail-btn" onclick="openEditProductModal('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price},'${p.category}','${p.image||''}','${(p.description||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')"><i class="fas fa-pen"></i> Editar</button>
+            <td style="display:flex;gap:0.5rem;flex-wrap:wrap">
+                <button class="action-btn detail-btn" onclick="openEditProductModal('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price},'${p.category}','${p.image||''}','${(p.description||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">
+                    <i class="fas fa-pen"></i> Editar
+                </button>
+                <button class="action-btn ${p.sold_out ? 'btn-reactivar' : 'btn-agotado'}" onclick="toggleProductSoldOut('${p.id}',${p.sold_out})">
+                    <i class="fas ${p.sold_out ? 'fa-check-circle' : 'fa-ban'}"></i> ${p.sold_out ? 'Reactivar' : 'Agotado'}
+                </button>
                 <button class="delete-btn" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
             </td>
         </tr>`;
@@ -778,21 +822,37 @@ function renderProductsVisualGrid(catId) {
         const nameSafe = p.name.replace(/'/g, "\\'");
         const imgSafe  = (p.image || '').replace(/'/g, "\\'");
         const descSafe = (p.description || '').replace(/'/g, "\\'").replace(/\n/g, ' ');
+        const agotadoOverlay = p.sold_out ? `<div class="agotado-overlay"><span>AGOTADO</span></div>` : '';
         return `
-        <div class="product-mini-card product-mini-editable">
-            <img src="${imgSrc}" class="product-mini-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}">
+        <div class="product-mini-card product-mini-editable${p.sold_out ? ' product-mini-agotado' : ''}">
+            <div style="position:relative">
+                <img src="${imgSrc}" class="product-mini-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}">
+                ${agotadoOverlay}
+            </div>
             <div class="product-mini-info">
-                <span class="product-mini-cat">${p.category}</span>
+                <span class="product-mini-cat">${catLabel(p.category)}</span>
                 <h4>${p.name}</h4>
                 <p class="product-mini-price">${formatCOP(p.price)}</p>
             </div>
             <div class="product-mini-actions">
-                <button class="edit-price-btn" onclick="openEditProductModal('${p.id}','${nameSafe}',${p.price},'${p.category}','${imgSafe}','${descSafe}')">
-                    <i class="fas fa-pen"></i> Editar precio
+                <button class="edit-price-btn" style="margin-bottom:0.4rem" onclick="openEditProductModal('${p.id}','${nameSafe}',${p.price},'${p.category}','${imgSafe}','${descSafe}')">
+                    <i class="fas fa-pen"></i> Editar
+                </button>
+                <button class="sold-out-toggle-btn ${p.sold_out ? 'btn-reactivar' : 'btn-agotado'}" onclick="toggleProductSoldOut('${p.id}',${p.sold_out})">
+                    <i class="fas ${p.sold_out ? 'fa-check-circle' : 'fa-ban'}"></i> ${p.sold_out ? 'Reactivar' : 'Marcar agotado'}
+                </button>
+                <button class="sold-out-toggle-btn" style="border-color:var(--error);color:var(--error);margin-top:0.3rem" onclick="deleteProduct('${p.id}')">
+                    <i class="fas fa-trash"></i> Eliminar
                 </button>
             </div>
         </div>`;
     }).join('');
+}
+
+async function toggleProductSoldOut(id, currentStatus) {
+    const newStatus = !currentStatus;
+    await _supabase.from('umamii_products').update({ sold_out: newStatus }).eq('id', id);
+    await loadProducts();
 }
 
 function openEditProductModal(id, name, price, category, image, description) {

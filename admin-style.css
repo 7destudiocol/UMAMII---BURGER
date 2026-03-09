@@ -1813,3 +1813,187 @@ th {
     /* Hide mobile cart bar on desktop */
     .mobile-cart-bar { display: none !important; }
 }
+
+/* ====================================================
+   EXPENSE BREAKDOWN BY CATEGORY (Dashboard)
+   ==================================================== */
+.expense-breakdown-section {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 2rem 2.5rem;
+    margin: 0 0 2rem;
+}
+
+.expense-breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.exp-breakdown-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 52px 110px;
+    align-items: center;
+    gap: 1rem;
+}
+
+.exp-breakdown-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.exp-breakdown-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.exp-breakdown-cat {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.exp-breakdown-bar-wrap {
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.exp-breakdown-bar {
+    height: 100%;
+    border-radius: 99px;
+    min-width: 4px;
+    transition: width 0.4s ease;
+}
+
+.exp-breakdown-pct {
+    font-size: 0.78rem;
+    color: var(--text-gray);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.exp-breakdown-amount {
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .exp-breakdown-row {
+        grid-template-columns: 120px 1fr 44px 90px;
+        gap: 0.5rem;
+    }
+}
+
+/* ====================================================
+   PRODUCT SOLD-OUT / CATALOG MANAGEMENT
+   ==================================================== */
+
+/* Sold-out card styling in visual grid */
+.product-mini-agotado {
+    opacity: 0.6;
+    border-color: rgba(255, 71, 87, 0.35) !important;
+}
+
+/* Overlay text on image */
+.agotado-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.agotado-overlay span {
+    background: rgba(255, 71, 87, 0.9);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+}
+
+/* Sold-out toggle buttons in visual grid */
+.sold-out-toggle-btn {
+    width: 100%;
+    padding: 0.4rem 0;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: transparent;
+    color: var(--text-gray);
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.sold-out-toggle-btn:hover {
+    background: rgba(255,255,255,0.07);
+}
+
+/* Specific styles for agotado / reactivar buttons */
+.btn-agotado {
+    border-color: rgba(255, 71, 87, 0.5) !important;
+    color: #ff4757 !important;
+}
+.btn-agotado:hover {
+    background: rgba(255, 71, 87, 0.12) !important;
+}
+
+.btn-reactivar {
+    border-color: rgba(46, 213, 115, 0.5) !important;
+    color: var(--success) !important;
+}
+.btn-reactivar:hover {
+    background: rgba(46, 213, 115, 0.12) !important;
+}
+
+/* Row tint in product table when agotado */
+.row-agotado td {
+    opacity: 0.55;
+}
+
+/* Status badges in product table */
+.badge-agotado {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    background: rgba(255, 71, 87, 0.15);
+    color: #ff4757;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.2rem;
+}
+
+.badge-disponible {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    background: rgba(46, 213, 115, 0.15);
+    color: var(--success);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.2rem;
+}

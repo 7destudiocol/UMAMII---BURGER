@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Umami Burger | Dashboard</title>
+    <title>Umami Burger - ADMIN</title>
+    <link rel="icon" type="image/webp" href="assets/img/Logo (2).webp">
     <link rel="stylesheet" href="admin-style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -102,6 +103,15 @@
                         <p id="total-orders-val">0</p>
                         <span class="stat-meta">En el período seleccionado</span>
                     </div>
+                </div>
+
+                <!-- Expense Breakdown by Category -->
+                <div id="expense-breakdown-section" class="expense-breakdown-section hidden">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-tags"></i> Gastos por Categoría</h3>
+                        <span class="stat-meta" id="expense-breakdown-subtitle">Período seleccionado</span>
+                    </div>
+                    <div id="expense-breakdown-list" class="expense-breakdown-list"></div>
                 </div>
 
                 <!-- Charts Row -->
