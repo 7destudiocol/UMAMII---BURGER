@@ -1498,3 +1498,97 @@ th {
     .order-actions { flex-direction: column; }
     .order-btn-confirm, .order-btn-reject { width: 100%; justify-content: center; }
 }
+
+/* ======================================================
+   ORDER TOAST NOTIFICATION
+====================================================== */
+@keyframes toastSlideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes toastSlideOut {
+    from { transform: translateX(0);    opacity: 1; }
+    to   { transform: translateX(120%); opacity: 0; }
+}
+@keyframes bellShake {
+    0%,100% { transform: rotate(0); }
+    15%      { transform: rotate(-18deg); }
+    30%      { transform: rotate(18deg); }
+    45%      { transform: rotate(-12deg); }
+    60%      { transform: rotate(12deg); }
+    75%      { transform: rotate(-6deg); }
+    90%      { transform: rotate(6deg); }
+}
+@keyframes badgePulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
+    70%  { box-shadow: 0 0 0 8px rgba(255, 71, 87, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+}
+
+.order-toast {
+    position: fixed;
+    bottom: calc(62px + 1rem);
+    right: 1rem;
+    background: #1e1e1e;
+    border: 1px solid rgba(255, 204, 0, 0.45);
+    border-left: 4px solid var(--primary);
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 9999;
+    min-width: 260px;
+    max-width: 340px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    animation: toastSlideIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+.order-toast-hide {
+    animation: toastSlideOut 0.4s ease forwards !important;
+}
+.order-toast-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(255,204,0,0.12);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    animation: bellShake 0.8s ease;
+}
+.order-toast-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1;
+    min-width: 0;
+}
+.order-toast-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+.order-toast-sub {
+    font-size: 0.78rem;
+    color: var(--text-gray);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.order-toast-close {
+    background: none;
+    border: none;
+    color: var(--text-gray);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 0 0 0.25rem;
+    flex-shrink: 0;
+}
+.order-toast-close:hover { color: white; }
+
+/* Shake animation on bottom nav Pedidos button */
+.bnav-shake { animation: bellShake 0.8s ease; }
+
+/* Pulse on badge when new order */
+.orders-badge:not(.hidden) { animation: badgePulse 1s ease 3; }

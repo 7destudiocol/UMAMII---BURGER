@@ -41,8 +41,7 @@ async function initDashboard() {
     loadStats();
     initSalesCart();
     updateOrderBadge();
-    // Refresh badge every 30 s so new orders appear without reload
-    setInterval(updateOrderBadge, 30000);
+    subscribeToOrders();
 }
 
 // ============================================================
@@ -894,6 +893,69 @@ document.getElementById('admin-form').addEventListener('submit', async (e) => {
 });
 
 function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
+
+// ============================================================
+// ORDERS — REALTIME SUBSCRIPTION
+// ============================================================
+function subscribeToOrders() {
+    if (!_supabase) return;
+    _supabase
+        .channel('umamii-orders-watch')
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'umamii_orders' },
+            (payload) => {
+                updateOrderBadge();
+                // If the orders tab is currently open, refresh it live
+                const ordersTab = document.getElementById('tab-orders');
+                if (ordersTab && !ordersTab.classList.contains('hidden')) {
+                    loadOrders();
+                }
+                showOrderToast(payload.new);
+            }
+        )
+        .subscribe();
+}
+
+function showOrderToast(order) {
+    // Play a subtle ping using Web Audio API
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.4);
+    } catch (_) {}
+
+    // Shake the badge button
+    const bnavBtn = document.querySelector('.bnav-item[onclick*="orders"]');
+    if (bnavBtn) {
+        bnavBtn.classList.add('bnav-shake');
+        setTimeout(() => bnavBtn.classList.remove('bnav-shake'), 800);
+    }
+
+    // Build toast
+    const name = order?.customer_name ? `<b>${order.customer_name}</b>` : 'Cliente';
+    const itemCount = Array.isArray(order?.items) ? order.items.reduce((s, i) => s + (i.qty || 1), 0) : '?';
+    const toast = document.createElement('div');
+    toast.className = 'order-toast';
+    toast.innerHTML = `
+        <div class="order-toast-icon"><i class="fas fa-bell"></i></div>
+        <div class="order-toast-body">
+            <span class="order-toast-title">¡Nuevo pedido!</span>
+            <span class="order-toast-sub">${name} &mdash; ${itemCount} ítem(s)</span>
+        </div>
+        <button class="order-toast-close" onclick="this.parentElement.remove()">✕</button>`;
+    document.body.appendChild(toast);
+    // Auto-dismiss after 8 s
+    setTimeout(() => { toast.classList.add('order-toast-hide'); setTimeout(() => toast.remove(), 400); }, 8000);
+}
 
 // ============================================================
 // ORDERS
