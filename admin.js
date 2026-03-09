@@ -464,16 +464,19 @@ function renderSalesGrid(catId) {
         const qty = cart[p.name]?.qty || 0;
         const imgSrc = p.image ? `assets/img/${p.image}` : `assets/img/Logo (2).webp`;
         return `
-        <div class="pos-card ${qty > 0 ? 'pos-card-active' : ''}" id="card-${sanitizeId(p.name)}">
-            <img src="${imgSrc}" class="pos-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}">
-            <div class="pos-info">
+        <div class="product-mini-card ${qty > 0 ? 'product-mini-card-active' : ''}" id="card-${sanitizeId(p.name)}">
+            <img src="${imgSrc}" class="product-mini-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}">
+            <div class="product-mini-info">
+                <span class="product-mini-cat">${catLabel(p.category)}</span>
                 <h4>${p.name}</h4>
-                <p class="pos-price">$${p.price.toLocaleString()}</p>
+                <p class="product-mini-price">${formatCOP(p.price)}</p>
             </div>
-            <div class="pos-controls">
-                <button class="qty-btn" onclick="updateCart('${p.name}', ${p.price}, -1)">−</button>
-                <span id="qty-${sanitizeId(p.name)}" class="qty-val">${qty}</span>
-                <button class="qty-btn qty-btn-add" onclick="updateCart('${p.name}', ${p.price}, 1)">+</button>
+            <div class="product-mini-actions">
+                <div class="pos-controls">
+                    <button class="qty-btn" onclick="updateCart('${p.name}', ${p.price}, -1)">−</button>
+                    <span id="qty-${sanitizeId(p.name)}" class="qty-val">${qty}</span>
+                    <button class="qty-btn qty-btn-add" onclick="updateCart('${p.name}', ${p.price}, 1)">+</button>
+                </div>
             </div>
         </div>`;
     }).join('');
@@ -494,7 +497,7 @@ function updateCart(name, price, delta) {
 
     // Highlight card
     const card = document.getElementById(`card-${sanitizeId(name)}`);
-    if (card) card.classList.toggle('pos-card-active', (cart[name]?.qty || 0) > 0);
+    if (card) card.classList.toggle('product-mini-card-active', (cart[name]?.qty || 0) > 0);
 
     renderCartSummary();
 }
