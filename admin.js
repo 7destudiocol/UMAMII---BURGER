@@ -53,6 +53,17 @@ function showTab(tabId, el) {
     if (el) el.classList.add('active');
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+    // Hide mobile cart bar when leaving the sales tab
+    if (tabId !== 'sales') {
+        const bar = document.getElementById('mobile-cart-bar');
+        if (bar) bar.classList.add('hidden');
+    } else {
+        // Re-evaluate bar visibility when entering sales tab
+        const entries = Object.entries(cart).filter(([, v]) => v.qty > 0);
+        const total = entries.reduce((sum, [, v]) => sum + v.price * v.qty, 0);
+        const count = entries.reduce((sum, [, v]) => sum + v.qty, 0);
+        updateMobileCartBar(count, total);
+    }
     loadTabData(tabId);
 }
 
@@ -470,6 +481,7 @@ function renderCartSummary() {
     if (!entries.length) {
         list.innerHTML = '<p class="cart-empty-msg">Sin productos aún</p>';
         totalEl.innerText = '$0';
+        updateMobileCartBar(0, 0);
         return;
     }
 
@@ -491,6 +503,27 @@ function renderCartSummary() {
         </div>`;
     }).join('');
     totalEl.innerText = `$${total.toLocaleString()}`;
+
+    const itemCount = entries.reduce((sum, [, v]) => sum + v.qty, 0);
+    updateMobileCartBar(itemCount, total);
+}
+
+function updateMobileCartBar(itemCount, total) {
+    const bar = document.getElementById('mobile-cart-bar');
+    if (!bar) return;
+    const onSalesTab = !document.getElementById('tab-sales').classList.contains('hidden');
+    if (itemCount > 0 && onSalesTab) {
+        document.getElementById('mob-cart-count').textContent = `${itemCount} ítem${itemCount !== 1 ? 's' : ''}`;
+        document.getElementById('mob-cart-total').textContent = `$${total.toLocaleString()}`;
+        bar.classList.remove('hidden');
+    } else {
+        bar.classList.add('hidden');
+    }
+}
+
+function scrollToCartSummary() {
+    const panel = document.querySelector('.cart-summary-panel');
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function clearCart() {

@@ -353,6 +353,18 @@
                 <span>Catálogo</span>
             </button>
         </nav>
+
+        <!-- Mobile floating cart bar (shown on mobile when cart has items) -->
+        <div id="mobile-cart-bar" class="mobile-cart-bar hidden">
+            <div class="mob-cart-info">
+                <i class="fas fa-shopping-basket"></i>
+                <span id="mob-cart-count">0 ítems</span>
+            </div>
+            <span id="mob-cart-total" class="mob-cart-total">$0</span>
+            <button class="mob-cart-btn" onclick="scrollToCartSummary()">
+                Ver pedido <i class="fas fa-chevron-up"></i>
+            </button>
+        </div>
     </div>
 
     <!-- General Modal Container -->
