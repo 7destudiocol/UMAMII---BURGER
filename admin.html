@@ -153,6 +153,28 @@
 
             </section>
 
+            <!-- ===== ORDERS TAB ===== -->
+            <section id="tab-orders" class="tab-content hidden">
+                <header>
+                    <div class="title-with-icon">
+                        <div class="icon-bg"><i class="fas fa-bell"></i></div>
+                        <div>
+                            <h2>Historial de Pedidos</h2>
+                            <p class="subtitle">Pedidos recibidos desde el menú digital</p>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button class="filter-btn active" onclick="filterOrders('pending', this)">Pendientes</button>
+                        <button class="filter-btn" onclick="filterOrders('confirmed', this)">Confirmados</button>
+                        <button class="filter-btn" onclick="filterOrders('rejected', this)">Rechazados</button>
+                        <button class="filter-btn" onclick="filterOrders('all', this)">Todos</button>
+                    </div>
+                </header>
+                <div id="orders-list" class="orders-list">
+                    <p class="orders-empty-msg"><i class="fas fa-spinner fa-spin"></i> Cargando pedidos...</p>
+                </div>
+            </section>
+
             <!-- ===== SALES TAB (CART MODE) ===== -->
             <section id="tab-sales" class="tab-content hidden">
                 <header>
@@ -311,7 +333,12 @@
         <nav class="bottom-nav">
             <button class="bnav-item active" onclick="showTab('stats', this)">
                 <i class="fas fa-tachometer-alt"></i>
-                <span>Dashboard</span>
+                <span>Inicio</span>
+            </button>
+            <button class="bnav-item" onclick="showTab('orders', this)">
+                <i class="fas fa-bell"></i>
+                <span>Pedidos</span>
+                <span id="orders-badge" class="orders-badge hidden">0</span>
             </button>
             <button class="bnav-item" onclick="showTab('sales', this)">
                 <i class="fas fa-shopping-cart"></i>
@@ -323,7 +350,7 @@
             </button>
             <button class="bnav-item" onclick="showTab('products', this)">
                 <i class="fas fa-box"></i>
-                <span>Productos</span>
+                <span>Catálogo</span>
             </button>
         </nav>
     </div>

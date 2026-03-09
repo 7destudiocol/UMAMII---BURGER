@@ -25,7 +25,7 @@ function initSupabase() {
 function checkAdminPassword() {
     const pass = document.getElementById('admin-pass').value;
     const err  = document.getElementById('login-error');
-    if (pass === 'GORDO123') {
+    if (pass === 'Gordo1') {
         document.getElementById('login-overlay').classList.add('hidden');
         document.getElementById('admin-dashboard').classList.remove('hidden');
         initDashboard();
@@ -40,6 +40,9 @@ async function initDashboard() {
     await syncMenuWithDB();
     loadStats();
     initSalesCart();
+    updateOrderBadge();
+    // Refresh badge every 30 s so new orders appear without reload
+    setInterval(updateOrderBadge, 30000);
 }
 
 // ============================================================
@@ -56,6 +59,7 @@ function showTab(tabId, el) {
 async function loadTabData(tabId) {
     if (!_supabase) return;
     switch (tabId) {
+        case 'orders':   await loadOrders();   break;
         case 'sales':    await loadSales();    break;
         case 'expenses': await loadExpenses(); break;
         case 'products': await loadProducts(); break;
@@ -829,6 +833,145 @@ document.getElementById('admin-form').addEventListener('submit', async (e) => {
 });
 
 function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
+
+// ============================================================
+// ORDERS
+// ============================================================
+let _currentOrderFilter = 'pending';
+
+async function updateOrderBadge() {
+    if (!_supabase) return;
+    const { count } = await _supabase
+        .from('umamii_orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending');
+    const badge = document.getElementById('orders-badge');
+    if (!badge) return;
+    if (count && count > 0) {
+        badge.textContent = count > 9 ? '9+' : count;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+async function loadOrders(statusFilter) {
+    if (!_supabase) return;
+    if (statusFilter) _currentOrderFilter = statusFilter;
+    const list = document.getElementById('orders-list');
+    list.innerHTML = '<p class="orders-empty-msg"><i class="fas fa-spinner fa-spin"></i> Cargando...</p>';
+
+    let query = _supabase.from('umamii_orders').select('*').order('created_at', { ascending: false });
+    if (_currentOrderFilter !== 'all') query = query.eq('status', _currentOrderFilter);
+
+    const { data, error } = await query;
+    if (error) { list.innerHTML = `<p class="orders-empty-msg error">Error: ${error.message}</p>`; return; }
+    if (!data || data.length === 0) {
+        const labels = { pending: 'pedidos pendientes', confirmed: 'pedidos confirmados', rejected: 'pedidos rechazados', all: 'pedidos' };
+        list.innerHTML = `<p class="orders-empty-msg"><i class="fas fa-inbox"></i> No hay ${labels[_currentOrderFilter] || 'pedidos'}</p>`;
+        return;
+    }
+    list.innerHTML = data.map(o => renderOrderCard(o)).join('');
+    updateOrderBadge();
+}
+
+function filterOrders(status, btn) {
+    document.querySelectorAll('#tab-orders .filter-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    loadOrders(status);
+}
+
+function renderOrderCard(o) {
+    const items = Array.isArray(o.items) ? o.items : [];
+    const date  = new Date(o.created_at);
+    const timeAgo = timeSince(date);
+    const dateStr = date.toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const totalFmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(o.total);
+
+    const statusMap = {
+        pending:   { label: 'Pendiente',   cls: 'order-badge-pending' },
+        confirmed: { label: 'Confirmado',  cls: 'order-badge-confirmed' },
+        rejected:  { label: 'Rechazado',   cls: 'order-badge-rejected' },
+    };
+    const st = statusMap[o.status] || statusMap.pending;
+
+    const itemsHtml = items.map(i => `
+        <div class="order-item-row">
+            ${i.image ? `<img src="assets/img/${i.image}" class="order-item-img" onerror="this.style.display='none'" alt="">` : ''}
+            <span class="order-item-name">${i.quantity}× ${i.name}</span>
+            <span class="order-item-price">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(i.price * i.quantity)}</span>
+        </div>`).join('');
+
+    const actionBtns = o.status === 'pending' ? `
+        <div class="order-actions">
+            <button class="order-btn-confirm" onclick="convertOrderToSale('${o.id}')">
+                <i class="fas fa-check-circle"></i> Convertir a Venta
+            </button>
+            <button class="order-btn-reject" onclick="rejectOrder('${o.id}')">
+                <i class="fas fa-times-circle"></i> Rechazar
+            </button>
+        </div>` : '';
+
+    return `
+    <div class="order-card" id="order-${o.id}">
+        <div class="order-card-header">
+            <div class="order-meta">
+                <span class="order-time" title="${dateStr}"><i class="fas fa-clock"></i> ${timeAgo}</span>
+                ${o.customer_name ? `<span class="order-customer"><i class="fas fa-user"></i> ${o.customer_name}</span>` : ''}
+            </div>
+            <span class="order-status-badge ${st.cls}">${st.label}</span>
+        </div>
+        ${o.customer_note ? `<div class="order-note"><i class="fas fa-map-marker-alt"></i> ${o.customer_note}</div>` : ''}
+        <div class="order-items-list">${itemsHtml}</div>
+        <div class="order-total-row">
+            <span>Total</span>
+            <strong>${totalFmt}</strong>
+        </div>
+        ${actionBtns}
+    </div>`;
+}
+
+async function convertOrderToSale(orderId) {
+    if (!confirm('¿Convertir este pedido en venta? Se registrará en el historial de ventas.')) return;
+    const { data: order, error } = await _supabase.from('umamii_orders').select('*').eq('id', orderId).single();
+    if (error || !order) { alert('No se pudo obtener el pedido'); return; }
+
+    const items = Array.isArray(order.items) ? order.items : [];
+    const salesInsert = [];
+
+    for (const item of items) {
+        const { data: dbProd } = await _supabase.from('umamii_products').select('id').eq('name', item.name).single();
+        salesInsert.push({
+            product_id:  dbProd?.id || null,
+            quantity:    item.quantity,
+            total_price: item.price * item.quantity,
+            notes:       dbProd ? 'Pedido web' : item.name
+        });
+    }
+
+    const { error: saleErr } = await _supabase.from('umamii_sales').insert(salesInsert);
+    if (saleErr) { alert('Error al registrar venta: ' + saleErr.message); return; }
+
+    await _supabase.from('umamii_orders').update({ status: 'confirmed' }).eq('id', orderId);
+    loadOrders();
+    loadStats();
+    updateOrderBadge();
+}
+
+async function rejectOrder(orderId) {
+    if (!confirm('¿Rechazar este pedido?')) return;
+    await _supabase.from('umamii_orders').update({ status: 'rejected' }).eq('id', orderId);
+    loadOrders();
+    updateOrderBadge();
+}
+
+function timeSince(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60)  return 'hace un momento';
+    if (seconds < 3600) return `hace ${Math.floor(seconds / 60)} min`;
+    if (seconds < 86400) return `hace ${Math.floor(seconds / 3600)} h`;
+    return `hace ${Math.floor(seconds / 86400)} días`;
+}
 
 // ============================================================
 // SYNC MENU → DB  (now includes image column)

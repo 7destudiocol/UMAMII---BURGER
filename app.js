@@ -320,30 +320,55 @@ function updateCartUI() {
 }
 
 // WhatsApp Integration
-whatsappBtn.addEventListener('click', () => {
+whatsappBtn.addEventListener('click', async () => {
     if (cart.length === 0) {
         alert("¡Tu carrito está vacío! Agrega algo delicioso antes de pedir.");
         return;
     }
-    
+
     let message = "¡Hola UMAMI! 🍔 Venía del menú virtual y quiero hacer este pedido:\n\n";
     let total = 0;
-    
+
     cart.forEach(item => {
         const itemTotal = item.price * item.quantity;
         total += itemTotal;
-        // Prefix with category name (e.g., HAMBURGUESA TRADII)
         const categoryName = item.category ? item.category.toUpperCase() : '';
         message += `• *${item.quantity}x* ${categoryName} ${item.name} - ${formatColPesos(itemTotal)}\n`;
     });
-    
+
     message += `\n*TOTAL: ${formatColPesos(total)}*`;
+
+    const customerName = document.getElementById('customer-name')?.value.trim() || '';
+    const customerNote = document.getElementById('customer-note')?.value.trim() || '';
+    if (customerNote) message += `\n\n📍 ${customerNote}`;
     message += "\n\n¿Me confirman para pasarles mis datos de entrega? ¡Gracias! ✨";
-    
+
+    // Save order to Supabase (fire-and-forget — don't block WhatsApp)
+    try {
+        await getDB().from('umamii_orders').insert([{
+            items: cart.map(i => ({
+                name: i.name,
+                quantity: i.quantity,
+                price: i.price,
+                category: i.category,
+                image: i.image || null
+            })),
+            total,
+            customer_name: customerName || null,
+            customer_note: customerNote || null,
+            status: 'pending'
+        }]);
+    } catch (e) {
+        console.warn('No se pudo guardar el pedido en la BD:', e);
+    }
+
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/573233519428?text=${encodedMessage}`;
-    
     window.open(whatsappUrl, '_blank');
+
+    // Clear customer fields after sending
+    if (document.getElementById('customer-name')) document.getElementById('customer-name').value = '';
+    if (document.getElementById('customer-note')) document.getElementById('customer-note').value = '';
 });
 
 function openModal(imgSrc, name, desc, price, isSpicy) {
