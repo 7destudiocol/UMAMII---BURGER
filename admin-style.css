@@ -1193,64 +1193,17 @@ th {
 
     /* ---- Sales Cart ---- */
     .cart-layout { flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; }
-    .cart-summary-panel { width: 100%; }
+    /* Cart summary goes FIRST on mobile, product grid below */
+    .cart-summary-panel { order: -1; width: 100%; }
+    .cart-products-panel { order: 1; }
     .cart-summary-box { position: static; border-radius: 16px; }
-    .cart-items-list { max-height: unset; min-height: 60px; }
+    .cart-items-list { max-height: 30vh; min-height: 60px; }
     .sales-grid { max-height: unset; }
-    /* Extra bottom padding so sales history clears the floating cart bar + bottom nav */
-    #tab-sales { padding-bottom: calc(52px + 1rem); }
+    /* Bottom padding: nav (62px) + generous buffer so history table is never hidden */
+    #tab-sales { padding-bottom: calc(62px + 3rem); }
 
-    /* ---- Mobile Floating Cart Bar ---- */
-    .mobile-cart-bar {
-        display: flex;
-        position: fixed;
-        bottom: 62px;
-        left: 0;
-        right: 0;
-        background: #1a1a1a;
-        border-top: 2px solid var(--primary);
-        padding: 0.65rem 1.25rem;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        z-index: 200;
-        box-shadow: 0 -6px 28px rgba(0, 0, 0, 0.55);
-        transform: translateY(0);
-        transition: transform 0.25s ease;
-    }
-    .mobile-cart-bar.hidden {
-        transform: translateY(120%);
-        pointer-events: none;
-    }
-    .mob-cart-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.82rem;
-        color: var(--text-gray);
-    }
-    .mob-cart-info i { color: var(--primary); }
-    .mob-cart-total {
-        font-size: 1rem;
-        font-weight: 800;
-        color: var(--primary);
-        flex: 1;
-        text-align: center;
-    }
-    .mob-cart-btn {
-        background: var(--primary);
-        color: #111;
-        border: none;
-        border-radius: 10px;
-        padding: 0.55rem 0.9rem;
-        font-size: 0.82rem;
-        font-weight: 700;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        white-space: nowrap;
-    }
+    /* ---- Mobile Floating Cart Bar — hidden, cart is now at top ---- */
+    .mobile-cart-bar { display: none !important; }
 
     /* ---- Category filters ---- */
     .sales-cat-filters, .dash-cat-filters {
