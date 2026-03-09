@@ -233,6 +233,7 @@ header {
     color: black;
 }
 
+<<<<<<< HEAD
 .filter-btn-range i { margin-right: 0.35rem; }
 
 /* ====== DATE RANGE PICKER ====== */
@@ -302,6 +303,12 @@ header {
 }
 .drp-apply-btn:hover { opacity: 0.85; }
 
+=======
+h2 {
+    font-size: 2rem;
+    font-weight: 800;
+}
+>>>>>>> parent of 7039cea (feat: dashboard date range picker with start/end filtering)
 
 .stats-grid {
     display: grid;
@@ -1316,19 +1323,8 @@ th {
     .product-mini-img { height: 90px; }
 
     /* ---- Time filters ---- */
-    .time-filters { gap: 0.25rem; flex-wrap: wrap; }
+    .time-filters { gap: 0.25rem; }
     .filter-btn { padding: 0.4rem 0.7rem; font-size: 0.78rem; }
-
-    /* ---- Date range picker ---- */
-    .date-range-picker {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.6rem;
-        padding: 0.85rem 1rem;
-    }
-    .drp-sep { display: none; }
-    .drp-field input[type="date"] { width: 100%; box-sizing: border-box; font-size: 1rem; }
-    .drp-apply-btn { width: 100%; justify-content: center; margin-top: 0; }
 
     /* ---- Search ---- */
     .search-container { margin-bottom: 0.75rem; }

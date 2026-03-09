@@ -7,8 +7,6 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // ---- Global State ----
 let _supabase = null;
 let currentFilter = 'day';
-let customRangeStart = null; // ISO string, used when currentFilter === 'range'
-let customRangeEnd   = null;
 let cart = {};           // { productName: { qty, price } }
 let productsSearchQuery = '';
 let currentSalesCat = 'all';
@@ -84,18 +82,12 @@ async function loadTabData(tabId) {
 // ============================================================
 async function loadStats() {
     if (!_supabase) return;
-    const { start: startDate, end: endDate } = getDateRange();
-
-    function applyRange(query, col) {
-        query = query.gte(col, startDate);
-        if (endDate) query = query.lte(col, endDate);
-        return query;
-    }
+    const startDate = getDateRange();
 
     const [{ data: sales }, { data: others }, { data: expenses }] = await Promise.all([
-        applyRange(_supabase.from('umamii_sales').select('*, products:umamii_products(name)'), 'sale_date'),
-        applyRange(_supabase.from('umamii_other_income').select('*'), 'income_date'),
-        applyRange(_supabase.from('umamii_expenses').select('*'), 'expense_date')
+        _supabase.from('umamii_sales').select('*, products:umamii_products(name)').gte('sale_date', startDate),
+        _supabase.from('umamii_other_income').select('*').gte('income_date', startDate),
+        _supabase.from('umamii_expenses').select('*').gte('expense_date', startDate)
     ]);
 
     const totalSales    = sales   ? sales.reduce((a, s) => a + parseFloat(s.total_price), 0) : 0;
@@ -1160,49 +1152,19 @@ async function exportDataToCSV() {
 // HELPERS
 // ============================================================
 function getDateRange() {
-    if (currentFilter === 'range') {
-        return {
-            start: customRangeStart || new Date(0).toISOString(),
-            end:   customRangeEnd   || null
-        };
-    }
     let s = new Date(); s.setHours(0, 0, 0, 0);
     if (currentFilter === 'week')  s.setHours(-24 * ((s.getDay() || 7) - 1));
     else if (currentFilter === 'month') s.setDate(1);
     else if (currentFilter === 'year')  { s.setMonth(0); s.setDate(1); }
-    return { start: s.toISOString(), end: null };
+    return s.toISOString();
 }
 
 function setFilter(f) {
     currentFilter = f;
-    const map = { day: 'hoy', week: 'semana', month: 'mes', year: 'año', range: 'rango' };
     document.querySelectorAll('.filter-btn').forEach(b => {
-        const label = b.innerText.trim().toLowerCase().replace(/[^a-záéíóúñ]/gi, '');
-        b.classList.toggle('active', label === map[f]);
+        const map = { day: 'hoy', week: 'semana', month: 'mes', year: 'año' };
+        b.classList.toggle('active', b.innerText.toLowerCase() === map[f]);
     });
-    const picker = document.getElementById('date-range-picker');
-    if (f === 'range') {
-        picker.classList.remove('hidden');
-        // Pre-fill to current month if empty
-        const start = document.getElementById('drp-start');
-        const end   = document.getElementById('drp-end');
-        if (!start.value) {
-            const now = new Date();
-            start.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
-            end.value   = new Date().toISOString().slice(0,10);
-        }
-        return; // wait for user to press Aplicar
-    }
-    picker.classList.add('hidden');
-    loadStats();
-}
-
-function applyDateRange() {
-    const s = document.getElementById('drp-start').value;
-    const e = document.getElementById('drp-end').value;
-    if (!s) { alert('Selecciona una fecha de inicio'); return; }
-    customRangeStart = new Date(s).toISOString();
-    customRangeEnd   = e ? new Date(e + 'T23:59:59').toISOString() : null;
     loadStats();
 }
 
