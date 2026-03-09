@@ -44,11 +44,26 @@
                                 <p class="subtitle">Resumen general del negocio</p>
                             </div>
                         </div>
-                        <div class="time-filters">
-                            <button class="filter-btn active" onclick="setFilter('day')">Hoy</button>
-                            <button class="filter-btn" onclick="setFilter('week')">Semana</button>
-                            <button class="filter-btn" onclick="setFilter('month')">Mes</button>
-                            <button class="filter-btn" onclick="setFilter('year')">Año</button>
+                        <div class="time-filters-wrap">
+                            <div class="time-filters">
+                                <button class="filter-btn active" data-filter="day" onclick="setFilter('day')">Hoy</button>
+                                <button class="filter-btn" data-filter="week" onclick="setFilter('week')">Semana</button>
+                                <button class="filter-btn" data-filter="month" onclick="setFilter('month')">Mes</button>
+                                <button class="filter-btn" data-filter="year" onclick="setFilter('year')">Año</button>
+                                <button class="filter-btn" data-filter="custom" onclick="setFilter('custom')"><i class="fas fa-calendar-alt"></i> Rango</button>
+                            </div>
+                            <div class="period-nav" id="period-nav">
+                                <button class="period-nav-btn" onclick="shiftPeriod(-1)" title="Período anterior"><i class="fas fa-chevron-left"></i></button>
+                                <span id="period-label" class="period-label">Hoy</span>
+                                <button class="period-nav-btn" onclick="shiftPeriod(1)" title="Período siguiente"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                            <div id="custom-range-panel" class="custom-range-panel hidden">
+                                <label class="range-label">Desde</label>
+                                <input type="date" id="range-from" class="date-input">
+                                <label class="range-label">Hasta</label>
+                                <input type="date" id="range-to" class="date-input">
+                                <button class="apply-range-btn" onclick="applyCustomRange()"><i class="fas fa-check"></i> Aplicar</button>
+                            </div>
                         </div>
                     </div>
                     <div class="header-actions">

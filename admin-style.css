@@ -233,6 +233,117 @@ header {
     color: black;
 }
 
+/* ---- Period filter wrapper ---- */
+.time-filters-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+/* ---- Period navigation (prev / label / next) ---- */
+.period-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.period-nav-btn {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-gray);
+    border-radius: 8px;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.period-nav-btn:hover {
+    background: var(--primary);
+    color: black;
+    border-color: var(--primary);
+}
+
+.period-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 260px;
+}
+
+/* ---- Custom date range panel ---- */
+.custom-range-panel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 0.5rem 0.75rem;
+}
+
+.custom-range-panel.hidden {
+    display: none;
+}
+
+.range-label {
+    font-size: 0.78rem;
+    color: var(--text-gray);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.date-input {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-white);
+    padding: 0.35rem 0.6rem;
+    font-size: 0.82rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+    filter: invert(0.7);
+    cursor: pointer;
+}
+
+.apply-range-btn {
+    background: var(--primary);
+    border: none;
+    border-radius: 8px;
+    color: black;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.38rem 0.9rem;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+}
+
+.apply-range-btn:hover {
+    opacity: 0.85;
+}
+
 h2 {
     font-size: 2rem;
     font-weight: 800;
@@ -1302,6 +1413,9 @@ th {
     /* ---- Time filters ---- */
     .time-filters { gap: 0.25rem; }
     .filter-btn { padding: 0.4rem 0.7rem; font-size: 0.78rem; }
+    .period-label { max-width: 160px; font-size: 0.75rem; }
+    .custom-range-panel { gap: 0.4rem; padding: 0.4rem 0.6rem; }
+    .date-input { font-size: 0.75rem; padding: 0.3rem 0.45rem; }
 
     /* ---- Search ---- */
     .search-container { margin-bottom: 0.75rem; }

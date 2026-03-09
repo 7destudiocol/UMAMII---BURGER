@@ -7,6 +7,9 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // ---- Global State ----
 let _supabase = null;
 let currentFilter = 'day';
+let periodOffset    = 0;      // nav offset from current period (0 = current)
+let customRangeFrom = '';     // ISO date string for custom range start
+let customRangeTo   = '';     // ISO date string for custom range end
 let cart = {};           // { productName: { qty, price } }
 let productsSearchQuery = '';
 let currentSalesCat = 'all';
@@ -82,12 +85,13 @@ async function loadTabData(tabId) {
 // ============================================================
 async function loadStats() {
     if (!_supabase) return;
-    const startDate = getDateRange();
+    const { start, end } = getDateRange();
+    updatePeriodLabel();
 
     const [{ data: sales }, { data: others }, { data: expenses }] = await Promise.all([
-        _supabase.from('umamii_sales').select('*, products:umamii_products(name)').gte('sale_date', startDate),
-        _supabase.from('umamii_other_income').select('*').gte('income_date', startDate),
-        _supabase.from('umamii_expenses').select('*').gte('expense_date', startDate)
+        _supabase.from('umamii_sales').select('*, products:umamii_products(name)').gte('sale_date', start).lte('sale_date', end),
+        _supabase.from('umamii_other_income').select('*').gte('income_date', start).lte('income_date', end),
+        _supabase.from('umamii_expenses').select('*').gte('expense_date', start).lte('expense_date', end)
     ]);
 
     const totalSales    = sales   ? sales.reduce((a, s) => a + parseFloat(s.total_price), 0) : 0;
@@ -1152,19 +1156,99 @@ async function exportDataToCSV() {
 // HELPERS
 // ============================================================
 function getDateRange() {
-    let s = new Date(); s.setHours(0, 0, 0, 0);
-    if (currentFilter === 'week')  s.setHours(-24 * ((s.getDay() || 7) - 1));
-    else if (currentFilter === 'month') s.setDate(1);
-    else if (currentFilter === 'year')  { s.setMonth(0); s.setDate(1); }
-    return s.toISOString();
+    if (currentFilter === 'custom') {
+        const s = customRangeFrom ? new Date(customRangeFrom + 'T00:00:00') : new Date();
+        const e = customRangeTo   ? new Date(customRangeTo   + 'T23:59:59') : new Date();
+        if (!customRangeTo) e.setHours(23, 59, 59, 999);
+        return { start: s.toISOString(), end: e.toISOString() };
+    }
+    const now = new Date();
+    let start, end;
+    if (currentFilter === 'day') {
+        start = new Date(now); start.setDate(start.getDate() + periodOffset); start.setHours(0, 0, 0, 0);
+        end   = new Date(start); end.setHours(23, 59, 59, 999);
+    } else if (currentFilter === 'week') {
+        const dow = (now.getDay() || 7) - 1; // 0=Mon
+        start = new Date(now); start.setDate(now.getDate() - dow + periodOffset * 7); start.setHours(0, 0, 0, 0);
+        end   = new Date(start); end.setDate(start.getDate() + 6); end.setHours(23, 59, 59, 999);
+    } else if (currentFilter === 'month') {
+        start = new Date(now.getFullYear(), now.getMonth() + periodOffset, 1);
+        end   = new Date(now.getFullYear(), now.getMonth() + periodOffset + 1, 0, 23, 59, 59, 999);
+    } else { // year
+        start = new Date(now.getFullYear() + periodOffset, 0, 1);
+        end   = new Date(now.getFullYear() + periodOffset, 11, 31, 23, 59, 59, 999);
+    }
+    return { start: start.toISOString(), end: end.toISOString() };
+}
+
+function getPeriodLabel() {
+    if (currentFilter === 'custom') {
+        if (customRangeFrom && customRangeTo) return `${customRangeFrom} → ${customRangeTo}`;
+        return 'Rango personalizado';
+    }
+    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const fullMonths = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const now = new Date();
+    if (currentFilter === 'day') {
+        const d = new Date(now); d.setDate(d.getDate() + periodOffset);
+        if (periodOffset === 0) return 'Hoy — ' + d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+        if (periodOffset === -1) return 'Ayer — ' + d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+        return d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    if (currentFilter === 'week') {
+        const dow = (now.getDay() || 7) - 1;
+        const s = new Date(now); s.setDate(now.getDate() - dow + periodOffset * 7); s.setHours(0,0,0,0);
+        const e = new Date(s); e.setDate(s.getDate() + 6);
+        return `${s.getDate()} ${months[s.getMonth()]} – ${e.getDate()} ${months[e.getMonth()]} ${e.getFullYear()}`;
+    }
+    if (currentFilter === 'month') {
+        const d = new Date(now.getFullYear(), now.getMonth() + periodOffset, 1);
+        return `${fullMonths[d.getMonth()]} ${d.getFullYear()}`;
+    }
+    return String(now.getFullYear() + periodOffset);
+}
+
+function updatePeriodLabel() {
+    const lbl = document.getElementById('period-label');
+    if (lbl) lbl.textContent = getPeriodLabel();
+    // Hide nav arrows in custom mode
+    const nav = document.getElementById('period-nav');
+    if (nav) nav.style.visibility = currentFilter === 'custom' ? 'hidden' : 'visible';
+}
+
+function shiftPeriod(dir) {
+    if (currentFilter === 'custom') return;
+    periodOffset += dir;
+    loadStats();
+}
+
+function applyCustomRange() {
+    const from = document.getElementById('range-from').value;
+    const to   = document.getElementById('range-to').value;
+    if (!from || !to) { alert('Selecciona ambas fechas para aplicar el rango.'); return; }
+    if (from > to) { alert('La fecha de inicio debe ser anterior a la fecha final.'); return; }
+    customRangeFrom = from;
+    customRangeTo   = to;
+    loadStats();
 }
 
 function setFilter(f) {
     currentFilter = f;
-    document.querySelectorAll('.filter-btn').forEach(b => {
-        const map = { day: 'hoy', week: 'semana', month: 'mes', year: 'año' };
-        b.classList.toggle('active', b.innerText.toLowerCase() === map[f]);
+    periodOffset  = 0;
+    document.querySelectorAll('.time-filters .filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === f);
     });
+    // Show/hide custom range panel
+    const panel = document.getElementById('custom-range-panel');
+    if (panel) panel.classList.toggle('hidden', f !== 'custom');
+    // Pre-fill today's dates when switching to custom
+    if (f === 'custom') {
+        const today = new Date().toISOString().split('T')[0];
+        const fromEl = document.getElementById('range-from');
+        const toEl   = document.getElementById('range-to');
+        if (fromEl && !fromEl.value) fromEl.value = today;
+        if (toEl   && !toEl.value)   toEl.value   = today;
+    }
     loadStats();
 }
 
