@@ -835,13 +835,13 @@ function renderProductsVisualGrid(catId) {
                 <p class="product-mini-price">${formatCOP(p.price)}</p>
             </div>
             <div class="product-mini-actions">
-                <button class="edit-price-btn" style="margin-bottom:0.4rem" onclick="openEditProductModal('${p.id}','${nameSafe}',${p.price},'${p.category}','${imgSafe}','${descSafe}')">
+                <button class="edit-price-btn" onclick="openEditProductModal('${p.id}','${nameSafe}',${p.price},'${p.category}','${imgSafe}','${descSafe}')">
                     <i class="fas fa-pen"></i> Editar
                 </button>
                 <button class="sold-out-toggle-btn ${p.sold_out ? 'btn-reactivar' : 'btn-agotado'}" onclick="toggleProductSoldOut('${p.id}',${p.sold_out})">
                     <i class="fas ${p.sold_out ? 'fa-check-circle' : 'fa-ban'}"></i> ${p.sold_out ? 'Reactivar' : 'Marcar agotado'}
                 </button>
-                <button class="sold-out-toggle-btn" style="border-color:var(--error);color:var(--error);margin-top:0.3rem" onclick="deleteProduct('${p.id}')">
+                <button class="sold-out-toggle-btn btn-eliminar" onclick="deleteProduct('${p.id}')">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
             </div>

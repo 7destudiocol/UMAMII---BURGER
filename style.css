@@ -1060,3 +1060,63 @@ body {
     background: var(--accent-color);
     transform: scale(1.05);
 }
+
+/* ====== SOLD-OUT PRODUCT CARD ====== */
+.product-card.sold-out {
+    opacity: 0.65;
+    pointer-events: auto;
+}
+
+.product-card.sold-out:hover {
+    transform: none;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    border-color: rgba(255, 183, 3, 0.1);
+}
+
+.product-card.sold-out:hover::before {
+    transform: scaleX(0);
+}
+
+.product-card.sold-out .product-image {
+    filter: grayscale(100%);
+}
+
+.product-card.sold-out .product-image-container {
+    cursor: default;
+}
+
+/* Overlay "AGOTADO" sobre la imagen */
+.sold-out-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.52);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sold-out-label {
+    background: rgba(220, 38, 38, 0.92);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    padding: 0.45rem 1.1rem;
+    border-radius: 8px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+
+/* Botón deshabilitado */
+.add-to-cart-btn.sold-out-btn {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.35);
+    cursor: not-allowed;
+    gap: 0.5rem;
+}
+
+.add-to-cart-btn.sold-out-btn:hover {
+    background: rgba(255,255,255,0.08);
+    transform: none;
+}

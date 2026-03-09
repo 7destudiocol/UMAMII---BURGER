@@ -203,7 +203,8 @@ function renderProducts(categoryId) {
     
     filteredProducts.forEach((product, index) => {
         const card = document.createElement('article');
-        card.className = 'product-card animate-fade-in';
+        const isSoldOut = !!product.sold_out;
+        card.className = `product-card animate-fade-in${isSoldOut ? ' sold-out' : ''}`;
         card.style.animationDelay = `${index * 0.1}s`;
         
         const imgSrc = product.image ? `assets/img/${product.image}` : `assets/img/Logo (2).webp`;
@@ -213,9 +214,22 @@ function renderProducts(categoryId) {
         const safeDesc = product.description ? product.description.replace(/'/g, "\\'") : '';
         const safePrice = formatColPesos(product.price);
 
+        const soldOutOverlay = isSoldOut
+            ? `<div class="sold-out-overlay"><span class="sold-out-label">AGOTADO</span></div>`
+            : '';
+
+        const cartBtn = isSoldOut
+            ? `<button class="add-to-cart-btn sold-out-btn" disabled>
+                    <i class="fas fa-ban"></i> AGOTADO
+               </button>`
+            : `<button class="add-to-cart-btn" onclick="addToCart('${safeName}', '${product.category}')">
+                    <i class="fas fa-plus"></i> AGREGAR AL CARRITO
+               </button>`;
+
         card.innerHTML = `
-            <div class="product-image-container" onclick="openModal('${imgSrc}', '${safeName}', '${safeDesc}', '${safePrice}', ${product.spicy || false})">
+            <div class="product-image-container" onclick="${isSoldOut ? '' : `openModal('${imgSrc}', '${safeName}', '${safeDesc}', '${safePrice}', ${product.spicy || false})`}">
                 <img src="${imgSrc}" alt="${product.name}" class="${imgClass}" loading="lazy">
+                ${soldOutOverlay}
             </div>
             <div class="product-info">
                 <div class="product-header">
@@ -223,9 +237,7 @@ function renderProducts(categoryId) {
                     <span class="product-price">${safePrice}</span>
                 </div>
                 ${product.description ? `<p class="product-desc">${product.description}</p>` : ''}
-                <button class="add-to-cart-btn" onclick="addToCart('${safeName}', '${product.category}')">
-                    <i class="fas fa-plus"></i> AGREGAR AL CARRITO
-                </button>
+                ${cartBtn}
             </div>
         `;
         

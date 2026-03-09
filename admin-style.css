@@ -854,6 +854,9 @@ th {
 .product-mini-price { font-size: 0.9rem; font-weight: 800; color: var(--success); }
 .product-mini-actions {
     padding: 0 0.75rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
 }
 .edit-price-btn {
     width: 100%;
@@ -1928,6 +1931,7 @@ th {
 }
 
 /* Sold-out toggle buttons in visual grid */
+/* Base style matches edit-price-btn exactly */
 .sold-out-toggle-btn {
     width: 100%;
     padding: 0.4rem 0;
@@ -1935,35 +1939,44 @@ th {
     border: 1px solid var(--glass-border);
     background: transparent;
     color: var(--text-gray);
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     transition: 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.3rem;
+    gap: 0.35rem;
 }
 
-.sold-out-toggle-btn:hover {
-    background: rgba(255,255,255,0.07);
-}
-
-/* Specific styles for agotado / reactivar buttons */
+/* Agotado — red outline, fills red on hover */
 .btn-agotado {
-    border-color: rgba(255, 71, 87, 0.5) !important;
-    color: #ff4757 !important;
+    border-color: #ff4757;
+    color: #ff4757;
 }
 .btn-agotado:hover {
-    background: rgba(255, 71, 87, 0.12) !important;
+    background: #ff4757;
+    color: #fff;
 }
 
+/* Reactivar — green outline, fills green on hover */
 .btn-reactivar {
-    border-color: rgba(46, 213, 115, 0.5) !important;
-    color: var(--success) !important;
+    border-color: var(--success);
+    color: var(--success);
 }
 .btn-reactivar:hover {
-    background: rgba(46, 213, 115, 0.12) !important;
+    background: var(--success);
+    color: #000;
+}
+
+/* Eliminar — red outline, fills red on hover */
+.btn-eliminar {
+    border-color: #ff4757;
+    color: #ff4757;
+}
+.btn-eliminar:hover {
+    background: #ff4757;
+    color: #fff;
 }
 
 /* Row tint in product table when agotado */
