@@ -25,31 +25,14 @@
 
     <!-- Main Dashboard -->
     <div id="admin-dashboard" class="dashboard hidden">
-        <nav class="sidebar">
-            <div class="sidebar-header">
-                <img src="assets/img/Logo (2).webp" alt="Logo" class="mini-logo">
-                <span>Dashboard</span>
-            </div>
-            <ul class="nav-links">
-                <li class="active" onclick="showTab('stats', this)">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </li>
-                <li onclick="showTab('sales', this)">
-                    <i class="fas fa-shopping-cart"></i> Ventas
-                </li>
-                <li onclick="showTab('expenses', this)">
-                    <i class="fas fa-receipt"></i> Gastos
-                </li>
-                <li onclick="showTab('products', this)">
-                    <i class="fas fa-box"></i> Productos
-                </li>
-            </ul>
-            <div class="sidebar-footer">
-                <button onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                </button>
-            </div>
-        </nav>
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <img src="assets/img/Logo (2).webp" alt="Umami Logo" class="top-bar-logo">
+            <span class="top-bar-title">Umami Burger</span>
+            <button class="top-bar-logout" onclick="logout()" title="Cerrar sesión">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
 
         <main class="content">
             <!-- ===== DASHBOARD TAB ===== -->
@@ -323,6 +306,26 @@
                 </div>
             </section>
         </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="bnav-item active" onclick="showTab('stats', this)">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </button>
+            <button class="bnav-item" onclick="showTab('sales', this)">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Ventas</span>
+            </button>
+            <button class="bnav-item" onclick="showTab('expenses', this)">
+                <i class="fas fa-receipt"></i>
+                <span>Gastos</span>
+            </button>
+            <button class="bnav-item" onclick="showTab('products', this)">
+                <i class="fas fa-box"></i>
+                <span>Productos</span>
+            </button>
+        </nav>
     </div>
 
     <!-- General Modal Container -->

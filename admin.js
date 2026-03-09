@@ -46,7 +46,7 @@ async function initDashboard() {
 // NAVIGATION
 // ============================================================
 function showTab(tabId, el) {
-    document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
+    document.querySelectorAll('.bnav-item').forEach(btn => btn.classList.remove('active'));
     if (el) el.classList.add('active');
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     document.getElementById(`tab-${tabId}`).classList.remove('hidden');
