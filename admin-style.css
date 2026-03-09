@@ -1182,14 +1182,18 @@ th {
     .cart-summary-box { position: static; border-radius: 16px; }
     .cart-items-list { max-height: unset; min-height: 60px; }
     .sales-grid { max-height: unset; }
-    .pos-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; padding: 0.5rem; }
-    .pos-card { overflow: hidden; }
-    .pos-img { width: 100%; height: auto; max-height: 110px; min-height: 70px; object-fit: cover; display: block; }
-    .pos-info { padding: 0.55rem; }
-    .pos-info h4 { font-size: 0.78rem; }
+    /* Single column so cards never overflow the screen */
+    .pos-grid { grid-template-columns: 1fr; gap: 0.6rem; padding: 0.5rem; }
+    .pos-card { overflow: hidden; display: flex; flex-direction: row; align-items: center; min-height: 80px; }
+    .pos-img { width: 90px; min-width: 90px; height: 80px; object-fit: cover; border-radius: 10px 0 0 10px; flex-shrink: 0; }
+    .pos-info { padding: 0.6rem 0.75rem; flex: 1; text-align: left; }
+    .pos-info h4 { font-size: 0.85rem; margin-bottom: 0.2rem; }
     .pos-price { font-size: 0.9rem; }
-    .pos-controls { gap: 0.65rem; padding: 0 0.65rem 0.75rem; margin-top: 0.5rem; }
-    .qty-btn { width: 32px; height: 32px; font-size: 1rem; }
+    .pos-controls { flex-direction: column; gap: 0.35rem; padding: 0 0.65rem 0 0; margin-top: 0; justify-content: center; }
+    .qty-btn { width: 30px; height: 30px; font-size: 0.95rem; }
+    .qty-val { font-size: 0.9rem; }
+    /* Extra bottom padding so sales history table clears the floating cart bar + bottom nav */
+    #tab-sales { padding-bottom: calc(52px + 1rem); }
 
     /* ---- Mobile Floating Cart Bar ---- */
     .mobile-cart-bar {
