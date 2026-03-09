@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Umami Burger | Admin Dashboard</title>
+    <title>Umami Burger | Dashboard</title>
     <link rel="stylesheet" href="admin-style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -28,29 +28,39 @@
         <nav class="sidebar">
             <div class="sidebar-header">
                 <img src="assets/img/Logo (2).webp" alt="Logo" class="mini-logo">
-                <span>Admin Umami</span>
+                <span>Dashboard</span>
             </div>
             <ul class="nav-links">
-                <li class="active" onclick="showTab('stats')">Resumen</li>
-                <li onclick="showTab('sales')">Ventas</li>
-                <li onclick="showTab('expenses')">Gastos</li>
-                <li onclick="showTab('products')">Productos</li>
+                <li class="active" onclick="showTab('stats', this)">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </li>
+                <li onclick="showTab('sales', this)">
+                    <i class="fas fa-shopping-cart"></i> Ventas
+                </li>
+                <li onclick="showTab('expenses', this)">
+                    <i class="fas fa-receipt"></i> Gastos
+                </li>
+                <li onclick="showTab('products', this)">
+                    <i class="fas fa-box"></i> Productos
+                </li>
             </ul>
             <div class="sidebar-footer">
-                <button onclick="logout()">Cerrar Sesión</button>
+                <button onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </button>
             </div>
         </nav>
 
         <main class="content">
-            <!-- Summary Tab -->
+            <!-- ===== DASHBOARD TAB ===== -->
             <section id="tab-stats" class="tab-content active">
                 <header>
                     <div class="header-left">
                         <div class="title-with-icon">
-                            <div class="icon-bg"><i class="fas fa-chart-line"></i></div>
+                            <div class="icon-bg"><i class="fas fa-tachometer-alt"></i></div>
                             <div>
-                                <h2>Flujo de Caja</h2>
-                                <p class="subtitle">Análisis contable mensual</p>
+                                <h2>Dashboard Umami</h2>
+                                <p class="subtitle">Resumen general del negocio</p>
                             </div>
                         </div>
                         <div class="time-filters">
@@ -61,52 +71,83 @@
                         </div>
                     </div>
                     <div class="header-actions">
-                        <button class="pos-trigger-btn" onclick="openVisualPos()">
-                            <i class="fas fa-cash-register"></i> Registrar Venta
-                        </button>
-                        <button class="income-btn" onclick="openModal('other_income')">
-                            <i class="fas fa-plus"></i> Otro Ingreso
-                        </button>
                         <button class="export-btn" onclick="exportDataToCSV()">
                             <i class="fas fa-file-csv"></i> Descargar CSV
                         </button>
                     </div>
                 </header>
-                
+
+                <!-- KPI Cards -->
                 <div class="stats-grid">
                     <div class="stat-card income">
+                        <div class="stat-icon"><i class="fas fa-arrow-up"></i></div>
                         <h3>Total Ingresos</h3>
                         <p id="total-income-val">$0</p>
                         <span class="stat-meta">Ventas + Otros Ingresos</span>
                     </div>
                     <div class="stat-card expense">
+                        <div class="stat-icon"><i class="fas fa-arrow-down"></i></div>
                         <h3>Total Gastos</h3>
                         <p id="total-expenses-val">$0</p>
                         <span class="stat-meta">Operativos y fijos</span>
                     </div>
                     <div class="stat-card accumulated">
+                        <div class="stat-icon"><i class="fas fa-coins"></i></div>
                         <h3>Neto Acumulado</h3>
                         <p id="cash-flow-val">$0</p>
                         <span class="stat-meta">Utilidad real</span>
                     </div>
+                    <div class="stat-card orders">
+                        <div class="stat-icon"><i class="fas fa-receipt"></i></div>
+                        <h3>Pedidos</h3>
+                        <p id="total-orders-val">0</p>
+                        <span class="stat-meta">En el período seleccionado</span>
+                    </div>
                 </div>
 
-                <div class="dashboard-main-chart">
-                    <div class="chart-header">
-                        <h3>Análisis de Flujo Mensual</h3>
-                        <div class="chart-legend">
-                            <span class="legend-item"><i class="fas fa-square" style="color: var(--success)"></i> Ingresos</span>
-                            <span class="legend-item"><i class="fas fa-square" style="color: var(--error)"></i> Gastos</span>
-                            <span class="legend-item"><i class="fas fa-circle" style="color: var(--primary)"></i> Neto</span>
+                <!-- Charts Row -->
+                <div class="charts-row">
+                    <div class="dashboard-main-chart chart-col-wide">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-bar"></i> Análisis de Flujo Mensual</h3>
+                            <div class="chart-legend">
+                                <span class="legend-item"><i class="fas fa-square" style="color: var(--success)"></i> Ingresos</span>
+                                <span class="legend-item"><i class="fas fa-square" style="color: var(--error)"></i> Gastos</span>
+                                <span class="legend-item"><i class="fas fa-circle" style="color: var(--primary)"></i> Neto</span>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="mainFlowChart"></canvas>
                         </div>
                     </div>
-                    <div class="chart-wrapper">
-                        <canvas id="mainFlowChart"></canvas>
+
+                    <div class="dashboard-main-chart chart-col-narrow">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-pie"></i> Más vendidos</h3>
+                        </div>
+                        <div class="chart-wrapper chart-wrapper-donut">
+                            <canvas id="productsDonutChart"></canvas>
+                        </div>
+                        <div id="donut-legend" class="donut-legend"></div>
                     </div>
                 </div>
 
+                <!-- TOP 3 Podium -->
+                <div class="dashboard-main-chart podium-section">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-trophy"></i> Top 3 Productos más vendidos</h3>
+                    </div>
+                    <div id="podium-container" class="podium-container">
+                        <div class="podium-loading"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</div>
+                    </div>
+                </div>
+
+                <!-- Monthly Table with Delete -->
                 <div class="monthly-table-container">
-                    <h3>Detalle Mensual</h3>
+                    <div class="table-section-header">
+                        <h3><i class="fas fa-table"></i> Detalle Mensual</h3>
+                        <small class="table-hint">Haz clic en una fila para ver y eliminar registros del mes</small>
+                    </div>
                     <div class="scroll-table">
                         <table id="monthly-summary-table">
                             <thead>
@@ -116,6 +157,78 @@
                                     <th>Gastos</th>
                                     <th>Neto</th>
                                     <th>Acumulado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Dashboard Products Catalog -->
+                <div class="monthly-table-container mt-3">
+                    <div class="table-section-header">
+                        <h3><i class="fas fa-box-open"></i> Catálogo de Productos</h3>
+                        <div id="dash-cat-filters" class="dash-cat-filters"></div>
+                    </div>
+                    <div id="dashboard-products-grid" class="products-mini-grid"></div>
+                </div>
+            </section>
+
+            <!-- ===== SALES TAB (CART MODE) ===== -->
+            <section id="tab-sales" class="tab-content hidden">
+                <header>
+                    <div class="title-with-icon">
+                        <div class="icon-bg"><i class="fas fa-shopping-cart"></i></div>
+                        <div>
+                            <h2>Registrar Venta</h2>
+                            <p class="subtitle">Selecciona productos del menú para armar el pedido</p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="cart-layout">
+                    <!-- Left: Product Grid -->
+                    <div class="cart-products-panel">
+                        <div id="sales-cat-filters" class="sales-cat-filters"></div>
+                        <div id="sales-product-grid" class="pos-grid sales-grid"></div>
+                    </div>
+                    <!-- Right: Cart Summary -->
+                    <div class="cart-summary-panel">
+                        <div class="cart-summary-box">
+                            <h3><i class="fas fa-shopping-basket"></i> Pedido actual</h3>
+                            <div id="cart-items-list" class="cart-items-list">
+                                <p class="cart-empty-msg">Sin productos aún</p>
+                            </div>
+                            <div class="cart-total-row">
+                                <span>Total:</span>
+                                <b id="cart-total-amount">$0</b>
+                            </div>
+                            <button class="confirm-sale-btn" onclick="submitCartSale()">
+                                <i class="fas fa-check-circle"></i> Confirmar Venta
+                            </button>
+                            <button class="clear-cart-btn" onclick="clearCart()">
+                                <i class="fas fa-trash-alt"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sales History Table -->
+                <div class="table-container mt-4">
+                    <div class="table-section-header">
+                        <h3><i class="fas fa-history"></i> Historial de Ventas</h3>
+                    </div>
+                    <div class="scroll-table">
+                        <table id="sales-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Producto</th>
+                                    <th>Cant.</th>
+                                    <th>Total</th>
+                                    <th>Notas</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -124,119 +237,79 @@
                 </div>
             </section>
 
-            <!-- Sales Tab -->
-            <section id="tab-sales" class="tab-content hidden">
-                <header>
-                    <h2>Control de Ventas</h2>
-                </header>
-
-                <div class="pos-container">
-                    <div class="pos-entry">
-                        <h3>Venta Manual (POS)</h3>
-                        <div class="pos-form">
-                            <select id="pos-category" onchange="updatePOSProducts()">
-                                <option value="">Selecciona Categoría</option>
-                            </select>
-                            <select id="pos-product">
-                                <option value="">Selecciona Producto</option>
-                            </select>
-                            <input type="number" id="pos-qty" value="1" min="1">
-                            <button class="add-btn" onclick="addManualSale()">Registrar Venta</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <table id="sales-table">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Producto</th>
-                                <th>Cant.</th>
-                                <th>Total</th>
-                                <th>Notas</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Expenses Tab -->
+            <!-- ===== EXPENSES TAB ===== -->
             <section id="tab-expenses" class="tab-content hidden">
                 <header>
-                    <h2>Registro de Gastos</h2>
-                    <button class="add-btn" onclick="openModal('expense')">+ Nuevo Gasto</button>
+                    <div class="title-with-icon">
+                        <div class="icon-bg"><i class="fas fa-receipt"></i></div>
+                        <div>
+                            <h2>Registro de Gastos</h2>
+                            <p class="subtitle">Gastos operativos y fijos del negocio</p>
+                        </div>
+                    </div>
+                    <button class="add-btn" onclick="openModal('expense')">
+                        <i class="fas fa-plus"></i> Nuevo Gasto
+                    </button>
                 </header>
                 <div class="table-container">
-                    <table id="expenses-table">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Descripción</th>
-                                <th>Categoría</th>
-                                <th>Monto</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                    <div class="scroll-table">
+                        <table id="expenses-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Monto</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
-            <!-- Products Tab -->
+            <!-- ===== PRODUCTS TAB ===== -->
             <section id="tab-products" class="tab-content hidden">
                 <header>
-                    <h2>Gestión de Productos</h2>
-                    <button class="add-btn" onclick="openModal('product')">+ Nuevo Producto</button>
+                    <div class="title-with-icon">
+                        <div class="icon-bg"><i class="fas fa-box"></i></div>
+                        <div>
+                            <h2>Gestión de Productos</h2>
+                            <p class="subtitle">Administra el catálogo de productos</p>
+                        </div>
+                    </div>
+                    <button class="add-btn" onclick="openModal('product')">
+                        <i class="fas fa-plus"></i> Nuevo Producto
+                    </button>
                 </header>
                 <div class="table-container">
-                    <table id="products-table">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Categoría</th>
-                                <th>Precio</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                    <div class="scroll-table">
+                        <table id="products-table">
+                            <thead>
+                                <tr>
+                                    <th>Imagen</th>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Precio</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- Visual POS Modal -->
-    <div id="pos-modal" class="modal-overlay hidden">
-        <div class="modal pos-modal-content">
-            <header class="modal-header">
-                <h2>Registrar Venta (POS)</h2>
-                <div class="pos-filters">
-                    <select id="pos-cat-filter" onchange="filterPosProducts()">
-                        <option value="all">Todas las categorías</option>
-                    </select>
-                </div>
-                <button class="close-btn" onclick="closePosModal()">&times;</button>
-            </header>
-            
-            <div id="pos-product-grid" class="pos-grid">
-                <!-- Products dynamically loaded here -->
-            </div>
-
-            <footer class="pos-footer">
-                <div class="pos-summary">
-                    <span>Items: <b id="pos-item-count">0</b></span>
-                    <span>Total: <b id="pos-total-amount">$0</b></span>
-                </div>
-                <button class="confirm-sale-btn" onclick="submitPosSale()">Confirmar Venta</button>
-            </footer>
-        </div>
-    </div>
-
     <!-- General Modal Container -->
     <div id="modal-container" class="modal-overlay hidden">
         <div class="modal">
-            <h2 id="modal-title">Nueva Entrada</h2>
+            <div class="modal-header-row">
+                <h2 id="modal-title">Nueva Entrada</h2>
+                <button class="modal-close-x" onclick="closeModal()">&times;</button>
+            </div>
             <form id="admin-form">
                 <div id="dynamic-fields"></div>
                 <div class="modal-actions">
@@ -244,6 +317,17 @@
                     <button type="submit" class="save-btn">Guardar</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Month Detail Modal -->
+    <div id="month-detail-modal" class="modal-overlay hidden">
+        <div class="modal modal-wide">
+            <div class="modal-header-row">
+                <h2 id="month-detail-title">Detalle del Mes</h2>
+                <button class="modal-close-x" onclick="closeMonthDetail()">&times;</button>
+            </div>
+            <div id="month-detail-content" class="month-detail-content"></div>
         </div>
     </div>
 
