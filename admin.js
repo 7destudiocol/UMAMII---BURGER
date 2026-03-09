@@ -571,13 +571,18 @@ async function deleteExpenseRow(id) {
 // ============================================================
 // PRODUCTS TABLE + VISUAL GRID
 // ============================================================
+// COP currency formatter
+const formatCOP = (price) =>
+    new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(price);
+
 async function loadProducts() {
     const { data } = await _supabase
         .from('umamii_products')
         .select('*')
         .order('category', { ascending: true });
 
-    _productsCache = data || [];
+    // Normalize categories to lowercase to avoid duplicates
+    _productsCache = (data || []).map(p => ({ ...p, category: (p.category || '').toLowerCase() }));
 
     // Table
     const tbody = document.querySelector('#products-table tbody');
@@ -588,7 +593,7 @@ async function loadProducts() {
             <td><img src="${imgSrc}" class="product-table-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}"></td>
             <td><b>${p.name}</b></td>
             <td>${p.category}</td>
-            <td class="primary">$${parseFloat(p.price).toLocaleString()}</td>
+            <td class="primary">${formatCOP(p.price)}</td>
             <td style="display:flex;gap:0.5rem">
                 <button class="action-btn detail-btn" onclick="openEditProductModal('${p.id}','${p.name.replace(/'/g,"\\'")}',${ p.price},'${p.category}','${p.image||''}','${(p.description||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')"><i class="fas fa-pen"></i> Editar</button>
                 <button class="delete-btn" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
@@ -602,13 +607,19 @@ async function loadProducts() {
 }
 
 // Visual catalog in products tab
+const CAT_DISPLAY = {
+    hamburguesas: 'Hamburguesas', perros: 'Perros', sandwiches: 'Sándwiches',
+    salchipapas: 'Salchipapas', adiciones: 'Adiciones', bebidas: 'Bebidas'
+};
+const catLabel = (id) => CAT_DISPLAY[id] || id.charAt(0).toUpperCase() + id.slice(1);
+
 function renderProductsCatFilters() {
     const wrap = document.getElementById('products-cat-filters');
     if (!wrap) return;
     const cats = [...new Set(_productsCache.map(p => p.category))].sort();
     wrap.innerHTML = `<button class="cat-filter-btn active" onclick="filterProductsGrid('all',this)">Todos</button>` +
         cats.map(c =>
-            `<button class="cat-filter-btn" onclick="filterProductsGrid('${c}',this)">${c}</button>`
+            `<button class="cat-filter-btn" onclick="filterProductsGrid('${c}',this)">${catLabel(c)}</button>`
         ).join('');
 }
 
@@ -634,7 +645,7 @@ function renderProductsVisualGrid(catId) {
             <div class="product-mini-info">
                 <span class="product-mini-cat">${p.category}</span>
                 <h4>${p.name}</h4>
-                <p class="product-mini-price">$${parseFloat(p.price).toLocaleString()}</p>
+                <p class="product-mini-price">${formatCOP(p.price)}</p>
             </div>
             <div class="product-mini-actions">
                 <button class="edit-price-btn" onclick="openEditProductModal('${p.id}','${nameSafe}',${p.price},'${p.category}','${imgSafe}','${descSafe}')">
@@ -654,7 +665,7 @@ function openEditProductModal(id, name, price, category, image, description) {
         <input type="hidden" id="prod-edit-id" value="${id}">
         <input type="text" id="prod-name" value="${name}" placeholder="Nombre del producto" required>
         <select id="prod-cat" required>
-            ${cats.map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${c}</option>`).join('')}
+            ${cats.map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${catLabel(c)}</option>`).join('')}
         </select>
         <input type="number" id="prod-price" value="${price}" placeholder="Precio" required>
         <input type="text" id="prod-img" value="${image}" placeholder="Nombre de imagen (opcional)">
@@ -758,7 +769,7 @@ async function syncMenuWithDB() {
     const upsertData = menuData.products.map(p => ({
         name: p.name,
         price: p.price,
-        category: menuData.categories.find(c => c.id === p.category)?.name || 'General',
+        category: (p.category || 'general').toLowerCase(),
         image: p.image || null
     }));
     // Insert only new ones (avoid overwriting custom DB entries)
