@@ -309,14 +309,14 @@ header {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
     margin-bottom: 4rem;
 }
 
 .stat-card {
     background: var(--bg-card);
-    padding: 2rem;
+    padding: 1.5rem 1.25rem;
     border-radius: 20px;
     border: 1px solid var(--glass-border);
     position: relative;
@@ -324,14 +324,14 @@ header {
 }
 
 .stat-card h3 {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--text-gray);
     text-transform: uppercase;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .stat-card p {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 800;
 }
 
@@ -1212,15 +1212,15 @@ th {
 
     /* ---- KPI Cards ---- */
     .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.5rem;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
         margin-bottom: 1.25rem;
     }
-    .stat-card { padding: 0.75rem 0.6rem 0.7rem; border-radius: 14px; }
-    .stat-card h3 { font-size: 0.62rem; margin-bottom: 0.4rem; }
-    .stat-card p { font-size: 1.15rem; }
-    .stat-icon { font-size: 1.2rem; top: 0.9rem; right: 0.9rem; }
-    .stat-meta { font-size: 0.65rem; }
+    .stat-card { padding: 0.65rem 0.5rem 0.6rem; border-radius: 12px; }
+    .stat-card h3 { font-size: 0.58rem; margin-bottom: 0.3rem; letter-spacing: 0; }
+    .stat-card p { font-size: 1rem; }
+    .stat-icon { display: none; }
+    .stat-meta { font-size: 0.6rem; }
 
     /* ---- Charts ---- */
     .charts-row { flex-direction: column; gap: 0.75rem; margin: 1rem 0; }
@@ -1367,11 +1367,11 @@ th {
 
 /* Tiny phones */
 @media (max-width: 380px) {
-    .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 0.35rem; }
-    .stat-card { padding: 0.6rem 0.4rem; }
-    .stat-card h3 { font-size: 0.55rem; }
-    .stat-card p { font-size: 0.95rem; }
-    .stat-meta { font-size: 0.55rem; }
+    .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 0.25rem; }
+    .stat-card { padding: 0.5rem 0.3rem; }
+    .stat-card h3 { font-size: 0.5rem; }
+    .stat-card p { font-size: 0.85rem; }
+    .stat-meta { font-size: 0.5rem; }
     h2 { font-size: 1.1rem; }
 }
 

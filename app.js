@@ -25,49 +25,14 @@ const CATEGORY_META = [
     { id: 'bebidas',      name: 'Bebidas' },
 ];
 
-// DOM Elements
-const categoryList = document.getElementById('category-list');
-const menuGrid = document.getElementById('menu-grid');
-const loaderWrapper = document.getElementById('loader-wrapper');
-const modal = document.getElementById('image-modal');
-const modalImg = document.getElementById('modal-img');
-const captionText = document.getElementById('modal-caption');
-const closeModalBtn = document.getElementsByClassName('close-modal')[0];
-const embersContainer = document.getElementById('embers-container');
-
-// Cart Elements
-const cartIcon = document.getElementById('cart-icon');
-const cartCount = document.getElementById('cart-count');
-const cartSidebar = document.getElementById('cart-sidebar');
-const cartOverlay = document.getElementById('cart-overlay');
-const closeCartBtn = document.querySelector('.close-cart');
-const cartItemsContainer = document.getElementById('cart-items');
-const cartTotalPrice = document.getElementById('cart-total-price');
-const whatsappBtn = document.getElementById('whatsapp-order-btn');
+// DOM Elements — assigned inside DOMContentLoaded to prevent crash on slow mobile
+let categoryList, menuGrid, loaderWrapper, modal, modalImg, captionText, closeModalBtn, embersContainer;
+let cartIcon, cartCount, cartSidebar, cartOverlay, closeCartBtn, cartItemsContainer, cartTotalPrice, whatsappBtn;
 
 // State
 let currentCategory = 'hamburguesas';
-let cart = JSON.parse(localStorage.getItem('umami_cart')) || [];
-
-// UI Interactivity - Modal
-closeModalBtn.onclick = function() {
-    modal.style.display = "none";
-    clearEmbers();
-}
-
-window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
-        clearEmbers();
-    }
-    if (event.target == cartOverlay) {
-        closeCart();
-    }
-}
-
-// UI Interactivity - Cart
-cartIcon.addEventListener('click', openCart);
-closeCartBtn.addEventListener('click', closeCart);
+let cart = [];
+try { cart = JSON.parse(localStorage.getItem('umami_cart')) || []; } catch (e) { cart = []; }
 
 function openCart() {
     // Calcular ancho de scrollbar para evitar salto de layout
@@ -89,15 +54,6 @@ function closeCart() {
         document.body.style.paddingRight = '';
     }, 400);
 }
-
-// Cerrar con tecla ESC
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeCart();
-        modal.style.display = "none";
-        clearEmbers();
-    }
-});
 
 // Initialize Application
 async function initApp() {
@@ -330,7 +286,7 @@ function updateCartUI() {
 }
 
 // WhatsApp Integration
-whatsappBtn.addEventListener('click', async () => {
+async function handleWhatsAppOrder() {
     if (cart.length === 0) {
         alert("¡Tu carrito está vacío! Agrega algo delicioso antes de pedir.");
         return;
@@ -379,7 +335,7 @@ whatsappBtn.addEventListener('click', async () => {
     // Clear customer fields after sending
     if (document.getElementById('customer-name')) document.getElementById('customer-name').value = '';
     if (document.getElementById('customer-note')) document.getElementById('customer-note').value = '';
-});
+}
 
 function openModal(imgSrc, name, desc, price, isSpicy) {
     modal.style.display = "block";
@@ -451,5 +407,53 @@ function clearEmbers() {
     }
 }
 
-// Bootstrap
-document.addEventListener('DOMContentLoaded', initApp);
+// Bootstrap — all DOM work lives here to prevent crashes on slow mobile
+document.addEventListener('DOMContentLoaded', () => {
+    // ── Assign DOM refs ──────────────────────────────────────────────────
+    categoryList       = document.getElementById('category-list');
+    menuGrid           = document.getElementById('menu-grid');
+    loaderWrapper      = document.getElementById('loader-wrapper');
+    modal              = document.getElementById('image-modal');
+    modalImg           = document.getElementById('modal-img');
+    captionText        = document.getElementById('modal-caption');
+    closeModalBtn      = document.getElementsByClassName('close-modal')[0];
+    embersContainer    = document.getElementById('embers-container');
+    cartIcon           = document.getElementById('cart-icon');
+    cartCount          = document.getElementById('cart-count');
+    cartSidebar        = document.getElementById('cart-sidebar');
+    cartOverlay        = document.getElementById('cart-overlay');
+    closeCartBtn       = document.querySelector('.close-cart');
+    cartItemsContainer = document.getElementById('cart-items');
+    cartTotalPrice     = document.getElementById('cart-total-price');
+    whatsappBtn        = document.getElementById('whatsapp-order-btn');
+
+    // ── Event listeners ──────────────────────────────────────────────────
+    if (closeModalBtn) {
+        closeModalBtn.onclick = function() {
+            modal.style.display = 'none';
+            clearEmbers();
+        };
+    }
+
+    window.onclick = function(event) {
+        if (event.target === modal) { modal.style.display = 'none'; clearEmbers(); }
+        if (event.target === cartOverlay) { closeCart(); }
+    };
+
+    if (cartIcon)     cartIcon.addEventListener('click', openCart);
+    if (closeCartBtn) closeCartBtn.addEventListener('click', closeCart);
+    if (whatsappBtn)  whatsappBtn.addEventListener('click', handleWhatsAppOrder);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { closeCart(); if (modal) { modal.style.display = 'none'; clearEmbers(); } }
+    });
+
+    // ── Safety fallback: force-hide loader after 8s ──────────────────────
+    setTimeout(() => {
+        const lw = document.getElementById('loader-wrapper');
+        if (lw) { lw.style.opacity = '0'; lw.style.visibility = 'hidden'; lw.style.display = 'none'; }
+    }, 8000);
+
+    // ── Start app ────────────────────────────────────────────────────────
+    initApp();
+});
