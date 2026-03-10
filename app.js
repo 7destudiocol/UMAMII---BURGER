@@ -106,6 +106,7 @@ async function initApp() {
         const { data, error } = await getDB()
             .from('umamii_products')
             .select('*')
+            .order('sort_order', { ascending: true })
             .order('category')
             .order('name');
 

@@ -847,6 +847,31 @@ th {
     flex-direction: column;
 }
 .product-mini-editable:hover { transform: translateY(-4px); border-color: var(--primary); }
+
+/* ===== DRAG & DROP — handle y estados ===== */
+.drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0;
+    color: var(--text-muted, #666);
+    font-size: 0.85rem;
+    cursor: grab;
+    border-bottom: 1px solid var(--glass-border);
+    transition: color 0.2s;
+}
+.drag-handle:hover { color: var(--primary); }
+.drag-handle:active { cursor: grabbing; }
+
+.product-mini-drag-ghost {
+    opacity: 0.35;
+    border: 2px dashed var(--primary) !important;
+}
+.product-mini-drag-chosen {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 2px rgba(255, 183, 3, 0.35);
+    transform: scale(1.03);
+}
 .product-mini-img { width: 100%; height: 110px; object-fit: cover; background: #111; }
 .product-mini-info { padding: 0.75rem; flex: 1; }
 .product-mini-cat { font-size: 0.65rem; color: var(--primary); text-transform: uppercase; font-weight: 700; }

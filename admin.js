@@ -797,7 +797,9 @@ async function loadProducts() {
     const { data } = await _supabase
         .from('umamii_products')
         .select('*')
-        .order('category', { ascending: true });
+        .order('sort_order', { ascending: true })
+        .order('category', { ascending: true })
+        .order('name', { ascending: true });
 
     // Normalize categories to lowercase, preserve sold_out flag
     _productsCache = (data || []).map(p => ({ ...p, category: (p.category || '').toLowerCase(), sold_out: !!p.sold_out }));
@@ -888,7 +890,8 @@ function renderProductsVisualGrid(catId) {
         const isCrownCard = p.name.includes('👑');
         const extraClasses = (isSpicyCard ? ' spicy-card' : '') + (isCrownCard ? ' crown-card' : '');
         return `
-        <div class="product-mini-card product-mini-editable${p.sold_out ? ' product-mini-agotado' : ''}${extraClasses}">
+        <div class="product-mini-card product-mini-editable${p.sold_out ? ' product-mini-agotado' : ''}${extraClasses}" data-id="${p.id}">
+            <div class="drag-handle" title="Arrastrar para reordenar"><i class="fas fa-grip-vertical"></i></div>
             <div style="position:relative">
                 <img src="${imgSrc}" class="product-mini-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}">
                 ${agotadoOverlay}
@@ -911,6 +914,36 @@ function renderProductsVisualGrid(catId) {
             </div>
         </div>`;
     }).join('');
+
+    // Init drag-and-drop reordering with SortableJS
+    if (typeof Sortable !== 'undefined') {
+        Sortable.create(grid, {
+            animation: 180,
+            handle: '.drag-handle',
+            ghostClass: 'product-mini-drag-ghost',
+            chosenClass: 'product-mini-drag-chosen',
+            onEnd: async function () {
+                const ids = [...grid.querySelectorAll('[data-id]')].map(el => el.dataset.id);
+                await saveProductOrder(ids);
+            }
+        });
+    }
+}
+
+async function saveProductOrder(orderedIds) {
+    // Batch update sort_order in Supabase
+    const updates = orderedIds.map((id, index) =>
+        _supabase.from('umamii_products').update({ sort_order: index }).eq('id', id)
+    );
+    await Promise.all(updates);
+    // Sync local cache order without full reload so grid position doesn't jump
+    const byId = Object.fromEntries(_productsCache.map(p => [p.id, p]));
+    _productsCache = orderedIds
+        .map(id => byId[id])
+        .filter(Boolean)
+        .concat(_productsCache.filter(p => !orderedIds.includes(p.id)));
+    // Refresh the full table too so it reflects new order
+    renderProductsTable(_productsCache);
 }
 
 async function toggleProductSoldOut(id, currentStatus) {

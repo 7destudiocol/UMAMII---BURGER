@@ -647,8 +647,8 @@ body {
     .sparks-container {
         display: block;
     }
-    /* Optimización: reducir número de chispas visibles en móvil si es necesario */
-    .spark:nth-child(n+12) {
+    /* Móvil: solo 5 chispas activas, el resto ocultas */
+    .spark:nth-child(n+6) {
         display: none;
     }
 }
@@ -1168,4 +1168,58 @@ body {
 .highlight-yellow {
     color: #FFD700;
     font-weight: 700;
+}
+
+/* ====================================================
+   OPTIMIZACIÓN MÓVIL — reducir peso de brillos/efectos
+   ==================================================== */
+@media (max-width: 768px) {
+    /* 1. background-attachment:fixed paraliza el render en iOS/Android */
+    body {
+        background-attachment: scroll;
+    }
+
+    /* 2. Desactivar hover de tarjeta — en táctil no aplica y consume GPU */
+    .product-card:hover {
+        transform: none;
+        box-shadow: var(--shadow-subtle);
+        border-color: rgba(255, 183, 3, 0.15);
+    }
+    .product-card:hover .product-image {
+        transform: none;
+    }
+    .product-card:hover::before {
+        transform: scaleX(0);
+    }
+    .product-card:hover .placeholder-img {
+        opacity: 0.3;
+        filter: drop-shadow(0 0 10px var(--primary-color));
+    }
+
+    /* 3. Reducir glow de tarjetas spicy — mantener estética, bajar intensidad */
+    .product-card.spicy-card {
+        animation-duration: 4s;
+        box-shadow: 0 0 8px rgba(255, 69, 0, 0.35);
+    }
+
+    /* 4. Reducir glow de tarjetas crown */
+    .product-card.crown-card {
+        animation-duration: 4s;
+        box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+    }
+
+    /* 5. Reducir box-shadow del logo */
+    .logo-container .logo {
+        box-shadow: 0 0 8px rgba(255, 183, 3, 0.15);
+    }
+
+    /* 6. Emberize el modal de fuego es caro: simplificar */
+    .spicy-fire .modal-content {
+        animation: none;
+        box-shadow: 0 0 16px #ff4d00;
+    }
+    .spicy-fire #modal-caption {
+        animation: none;
+        text-shadow: 0 0 8px #ffae00;
+    }
 }
