@@ -102,13 +102,24 @@ document.addEventListener('keydown', (e) => {
 // Initialize Application
 async function initApp() {
     try {
-        // Load products from Supabase
-        const { data, error } = await getDB()
+        // Load products from Supabase (sort_order requires migration; falls back to category+name)
+        let { data, error } = await getDB()
             .from('umamii_products')
             .select('*')
             .order('sort_order', { ascending: true })
             .order('category')
             .order('name');
+
+        if (error) {
+            // sort_order column doesn't exist yet — use fallback ordering
+            const fallback = await getDB()
+                .from('umamii_products')
+                .select('*')
+                .order('category')
+                .order('name');
+            data = fallback.data;
+            error = fallback.error;
+        }
 
         if (error) throw error;
         dbProducts = data || [];

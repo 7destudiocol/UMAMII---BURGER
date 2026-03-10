@@ -794,12 +794,23 @@ function parseCOPInput(val) {
 }
 
 async function loadProducts() {
-    const { data } = await _supabase
+    // Try ordering by sort_order (requires migration). Fall back to category+name if column doesn't exist yet.
+    let { data, error } = await _supabase
         .from('umamii_products')
         .select('*')
         .order('sort_order', { ascending: true })
         .order('category', { ascending: true })
         .order('name', { ascending: true });
+
+    if (error) {
+        // sort_order column likely doesn't exist yet — fallback query
+        const fallback = await _supabase
+            .from('umamii_products')
+            .select('*')
+            .order('category', { ascending: true })
+            .order('name', { ascending: true });
+        data = fallback.data;
+    }
 
     // Normalize categories to lowercase, preserve sold_out flag
     _productsCache = (data || []).map(p => ({ ...p, category: (p.category || '').toLowerCase(), sold_out: !!p.sold_out }));
