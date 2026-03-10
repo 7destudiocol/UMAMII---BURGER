@@ -2071,3 +2071,66 @@ th {
     letter-spacing: 0.05em;
     margin-top: 0.2rem;
 }
+
+/* ====== SPICY CARD 🌶️ (catálogo admin) ====== */
+@keyframes spicy-border-glow {
+    0%   { box-shadow: 0 0 12px #ff4500, 0 0 30px rgba(255,69,0,0.45), inset 0 0 10px rgba(255,69,0,0.1); border-color: #ff4500; }
+    50%  { box-shadow: 0 0 24px #ff6b00, 0 0 55px rgba(255,150,0,0.55), inset 0 0 20px rgba(255,100,0,0.18); border-color: #ffae00; }
+    100% { box-shadow: 0 0 12px #ff4500, 0 0 30px rgba(255,69,0,0.45), inset 0 0 10px rgba(255,69,0,0.1); border-color: #ff4500; }
+}
+
+@keyframes spicy-title-flicker {
+    0%, 100% { text-shadow: 0 0 8px #ff4500, 0 0 16px #ffae00; color: #ff6b00; }
+    50%       { text-shadow: 0 0 14px #ffae00, 0 0 28px #ff4500; color: #ffcc00; }
+}
+
+.product-mini-card.spicy-card {
+    border: 1.5px solid #ff4500 !important;
+    animation: spicy-border-glow 2s infinite ease-in-out;
+}
+
+.product-mini-card.spicy-card h4 {
+    animation: spicy-title-flicker 1.8s infinite ease-in-out;
+}
+
+/* ====== CROWN CARD 👑 (catálogo admin) ====== */
+@keyframes crown-shimmer {
+    0%   { box-shadow: 0 0 15px #ffd700, 0 0 35px rgba(255,215,0,0.3), inset 0 0 12px rgba(255,215,0,0.08); border-color: #ffd700; }
+    50%  { box-shadow: 0 0 28px #ffe44d, 0 0 60px rgba(255,215,0,0.55), inset 0 0 22px rgba(255,215,0,0.2); border-color: #fff0a0; }
+    100% { box-shadow: 0 0 15px #ffd700, 0 0 35px rgba(255,215,0,0.3), inset 0 0 12px rgba(255,215,0,0.08); border-color: #ffd700; }
+}
+
+@keyframes crown-title-gleam {
+    0%, 100% { text-shadow: 0 0 8px #ffd700, 0 0 16px rgba(255,215,0,0.6); color: #ffd700; }
+    50%       { text-shadow: 0 0 18px #ffe44d, 0 0 36px rgba(255,215,0,0.9); color: #fff8c0; }
+}
+
+.product-mini-card.crown-card {
+    border: 1.5px solid #ffd700 !important;
+    animation: crown-shimmer 2.5s infinite ease-in-out;
+    background: linear-gradient(145deg, #1a1a1a 60%, rgba(255,215,0,0.07)) !important;
+}
+
+.product-mini-card.crown-card h4 {
+    animation: crown-title-gleam 2.5s infinite ease-in-out;
+}
+
+/* ====== HIGHLIGHT YELLOW — descripción **texto** ====== */
+.highlight-yellow {
+    color: #FFD700;
+    font-weight: 700;
+}
+
+/* Tabla: filas spicy / crown */
+tr.spicy-card td:first-child {
+    border-left: 3px solid #ff4500;
+}
+tr.spicy-card b {
+    animation: spicy-title-flicker 1.8s infinite ease-in-out;
+}
+tr.crown-card td:first-child {
+    border-left: 3px solid #ffd700;
+}
+tr.crown-card b {
+    animation: crown-title-gleam 2.5s infinite ease-in-out;
+}

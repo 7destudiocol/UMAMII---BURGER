@@ -816,8 +816,11 @@ function renderProductsTable(list) {
         const soldLabel = p.sold_out
             ? `<span class="badge-agotado">Agotado</span>`
             : `<span class="badge-disponible">Disponible</span>`;
+        const isSpicy = p.name.includes('🌶️') || p.name.includes('🌶');
+        const isCrown = p.name.includes('👑');
+        const rowExtra = (isSpicy ? ' spicy-card' : '') + (isCrown ? ' crown-card' : '');
         return `
-        <tr class="${p.sold_out ? 'row-agotado' : ''}">
+        <tr class="${p.sold_out ? 'row-agotado' : ''}${rowExtra}">
             <td><img src="${imgSrc}" class="product-table-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}"></td>
             <td><b>${p.name}</b><br>${soldLabel}</td>
             <td>${catLabel(p.category)}</td>
@@ -881,8 +884,11 @@ function renderProductsVisualGrid(catId) {
         const imgSafe  = (p.image || '').replace(/'/g, "\\'");
         const descSafe = (p.description || '').replace(/'/g, "\\'").replace(/\n/g, ' ');
         const agotadoOverlay = p.sold_out ? `<div class="agotado-overlay"><span>AGOTADO</span></div>` : '';
+        const isSpicyCard = p.name.includes('🌶️') || p.name.includes('🌶');
+        const isCrownCard = p.name.includes('👑');
+        const extraClasses = (isSpicyCard ? ' spicy-card' : '') + (isCrownCard ? ' crown-card' : '');
         return `
-        <div class="product-mini-card product-mini-editable${p.sold_out ? ' product-mini-agotado' : ''}">
+        <div class="product-mini-card product-mini-editable${p.sold_out ? ' product-mini-agotado' : ''}${extraClasses}">
             <div style="position:relative">
                 <img src="${imgSrc}" class="product-mini-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}">
                 ${agotadoOverlay}

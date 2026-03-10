@@ -190,6 +190,12 @@ const formatColPesos = (price) => {
     return `$${new Intl.NumberFormat('es-CO').format(price)}`;
 }
 
+// Parser: convierte **texto** → <strong class="highlight-yellow">texto</strong>
+function parseDesc(text) {
+    if (!text) return '';
+    return text.replace(/\*\*(.+?)\*\*/g, '<strong class="highlight-yellow">$1</strong>');
+}
+
 // Render Products
 function renderProducts(categoryId) {
     menuGrid.innerHTML = '';
@@ -204,7 +210,9 @@ function renderProducts(categoryId) {
     filteredProducts.forEach((product, index) => {
         const card = document.createElement('article');
         const isSoldOut = !!product.sold_out;
-        card.className = `product-card animate-fade-in${isSoldOut ? ' sold-out' : ''}`;
+        const isSpicyCard = product.name.includes('🌶️') || product.name.includes('🌶');
+        const isCrownCard = product.name.includes('👑');
+        card.className = `product-card animate-fade-in${isSoldOut ? ' sold-out' : ''}${isSpicyCard ? ' spicy-card' : ''}${isCrownCard ? ' crown-card' : ''}`;
         card.style.animationDelay = `${index * 0.1}s`;
         
         const imgSrc = product.image ? `assets/img/${product.image}` : `assets/img/Logo (2).webp`;
@@ -236,7 +244,7 @@ function renderProducts(categoryId) {
                     <h3 class="product-title">${product.name}${product.spicy ? ' 🌶️' : ''}</h3>
                     <span class="product-price">${safePrice}</span>
                 </div>
-                ${product.description ? `<p class="product-desc">${product.description}</p>` : ''}
+                ${product.description ? `<p class="product-desc">${parseDesc(product.description)}</p>` : ''}
                 ${cartBtn}
             </div>
         `;
@@ -422,7 +430,7 @@ function openModal(imgSrc, name, desc, price, isSpicy) {
         
         ingredients.forEach((ing, index) => {
             const li = document.createElement('li');
-            li.textContent = ing.charAt(0).toUpperCase() + ing.slice(1);
+            li.innerHTML = parseDesc(ing.charAt(0).toUpperCase() + ing.slice(1));
             li.style.animationDelay = `${index * 0.15}s`;
             descElement.appendChild(li);
         });
