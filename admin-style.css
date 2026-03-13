@@ -1265,6 +1265,7 @@ th {
 
     /* ---- Sales Cart ---- */
 <<<<<<< HEAD
+<<<<<<< HEAD
     /* Contain ALL overflow at section level */
     #tab-sales {
         overflow-x: hidden;
@@ -1311,6 +1312,15 @@ th {
         box-sizing: border-box;
     }
 =======
+    /* Extra bottom padding so sales history clears the floating cart bar + bottom nav */
+    #tab-sales { padding-bottom: calc(52px + 1rem); }
+>>>>>>> parent of 149eece (fix: mobile sales - cart summary on top, products below, footer always visible)
+=======
+    .cart-layout { flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; }
+    .cart-summary-panel { width: 100%; }
+    .cart-summary-box { position: static; border-radius: 16px; }
+    .cart-items-list { max-height: unset; min-height: 60px; }
+    .sales-grid { max-height: unset; }
     /* Extra bottom padding so sales history clears the floating cart bar + bottom nav */
     #tab-sales { padding-bottom: calc(52px + 1rem); }
 >>>>>>> parent of 149eece (fix: mobile sales - cart summary on top, products below, footer always visible)

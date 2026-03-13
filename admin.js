@@ -109,7 +109,7 @@ async function loadStats() {
 // DASHBOARD — MONTHLY FLOW
 // ============================================================
 async function loadMonthlyFlow() {
-    const { data: monthlyData } = await _supabase.from('umamii_monthly_cash_flow').select('*');
+    const { data: monthlyData } = await _supabase.from('UMAMII_monthly_cash_flow').select('*');
     if (!monthlyData) return;
     renderMainChart(monthlyData);
     renderMonthlyTable(monthlyData);
