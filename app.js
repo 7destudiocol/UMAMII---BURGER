@@ -58,12 +58,24 @@ function closeCart() {
 // Initialize Application
 async function initApp() {
     try {
-        // Load products from Supabase
-        const { data, error } = await getDB()
+        // Load products from Supabase (sort_order requires migration; falls back to category+name)
+        let { data, error } = await getDB()
             .from('umamii_products')
             .select('*')
+            .order('sort_order', { ascending: true })
             .order('category')
             .order('name');
+
+        if (error) {
+            // sort_order column doesn't exist yet — use fallback ordering
+            const fallback = await getDB()
+                .from('umamii_products')
+                .select('*')
+                .order('category')
+                .order('name');
+            data = fallback.data;
+            error = fallback.error;
+        }
 
         if (error) throw error;
         dbProducts = data || [];
@@ -95,9 +107,9 @@ async function initApp() {
     }
 }
 
-// Safety fallback: force-hide loader after 8s in case of slow network
+// Safety fallback: force-hide loader after 8s (slow network / mobile)
 setTimeout(() => {
-    if (loaderWrapper) {
+    if (typeof loaderWrapper !== 'undefined' && loaderWrapper) {
         loaderWrapper.style.opacity = '0';
         loaderWrapper.style.visibility = 'hidden';
         loaderWrapper.style.display = 'none';
@@ -146,6 +158,12 @@ const formatColPesos = (price) => {
     return `$${new Intl.NumberFormat('es-CO').format(price)}`;
 }
 
+// Parser: convierte **texto** → <strong class="highlight-yellow">texto</strong>
+function parseDesc(text) {
+    if (!text) return '';
+    return text.replace(/\*\*(.+?)\*\*/g, '<strong class="highlight-yellow">$1</strong>');
+}
+
 // Render Products
 function renderProducts(categoryId) {
     menuGrid.innerHTML = '';
@@ -159,7 +177,10 @@ function renderProducts(categoryId) {
     
     filteredProducts.forEach((product, index) => {
         const card = document.createElement('article');
-        card.className = 'product-card animate-fade-in';
+        const isSoldOut = !!product.sold_out;
+        const isSpicyCard = product.name.includes('🌶️') || product.name.includes('🌶');
+        const isCrownCard = product.name.includes('👑');
+        card.className = `product-card animate-fade-in${isSoldOut ? ' sold-out' : ''}${isSpicyCard ? ' spicy-card' : ''}${isCrownCard ? ' crown-card' : ''}`;
         card.style.animationDelay = `${index * 0.1}s`;
         
         const imgSrc = product.image ? `assets/img/${product.image}` : `assets/img/Logo (2).webp`;
@@ -169,19 +190,30 @@ function renderProducts(categoryId) {
         const safeDesc = product.description ? product.description.replace(/'/g, "\\'") : '';
         const safePrice = formatColPesos(product.price);
 
+        const soldOutOverlay = isSoldOut
+            ? `<div class="sold-out-overlay"><span class="sold-out-label">AGOTADO</span></div>`
+            : '';
+
+        const cartBtn = isSoldOut
+            ? `<button class="add-to-cart-btn sold-out-btn" disabled>
+                    <i class="fas fa-ban"></i> AGOTADO
+               </button>`
+            : `<button class="add-to-cart-btn" onclick="addToCart('${safeName}', '${product.category}')">
+                    <i class="fas fa-plus"></i> AGREGAR AL CARRITO
+               </button>`;
+
         card.innerHTML = `
-            <div class="product-image-container" onclick="openModal('${imgSrc}', '${safeName}', '${safeDesc}', '${safePrice}', ${product.spicy || false})">
+            <div class="product-image-container" onclick="${isSoldOut ? '' : `openModal('${imgSrc}', '${safeName}', '${safeDesc}', '${safePrice}', ${product.spicy || false})`}">
                 <img src="${imgSrc}" alt="${product.name}" class="${imgClass}" loading="lazy">
+                ${soldOutOverlay}
             </div>
             <div class="product-info">
                 <div class="product-header">
                     <h3 class="product-title">${product.name}${product.spicy ? ' 🌶️' : ''}</h3>
                     <span class="product-price">${safePrice}</span>
                 </div>
-                ${product.description ? `<p class="product-desc">${product.description}</p>` : ''}
-                <button class="add-to-cart-btn" onclick="addToCart('${safeName}', '${product.category}')">
-                    <i class="fas fa-plus"></i> AGREGAR AL CARRITO
-                </button>
+                ${product.description ? `<p class="product-desc">${parseDesc(product.description)}</p>` : ''}
+                ${cartBtn}
             </div>
         `;
         
@@ -366,7 +398,7 @@ function openModal(imgSrc, name, desc, price, isSpicy) {
         
         ingredients.forEach((ing, index) => {
             const li = document.createElement('li');
-            li.textContent = ing.charAt(0).toUpperCase() + ing.slice(1);
+            li.innerHTML = parseDesc(ing.charAt(0).toUpperCase() + ing.slice(1));
             li.style.animationDelay = `${index * 0.15}s`;
             descElement.appendChild(li);
         });

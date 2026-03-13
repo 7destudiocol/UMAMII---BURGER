@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Umami Burger | Dashboard</title>
+    <title>Umami Burger - ADMIN</title>
+    <link rel="icon" type="image/webp" href="assets/img/Logo (2).webp">
     <link rel="stylesheet" href="admin-style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <!-- Login Overlay -->
@@ -46,11 +45,26 @@
                                 <p class="subtitle">Resumen general del negocio</p>
                             </div>
                         </div>
-                        <div class="time-filters">
-                            <button class="filter-btn active" onclick="setFilter('day')">Hoy</button>
-                            <button class="filter-btn" onclick="setFilter('week')">Semana</button>
-                            <button class="filter-btn" onclick="setFilter('month')">Mes</button>
-                            <button class="filter-btn" onclick="setFilter('year')">Año</button>
+                        <div class="time-filters-wrap">
+                            <div class="time-filters">
+                                <button class="filter-btn active" data-filter="day" onclick="setFilter('day')">Hoy</button>
+                                <button class="filter-btn" data-filter="week" onclick="setFilter('week')">Semana</button>
+                                <button class="filter-btn" data-filter="month" onclick="setFilter('month')">Mes</button>
+                                <button class="filter-btn" data-filter="year" onclick="setFilter('year')">Año</button>
+                                <button class="filter-btn" data-filter="custom" onclick="setFilter('custom')"><i class="fas fa-calendar-alt"></i> Rango</button>
+                            </div>
+                            <div class="period-nav" id="period-nav">
+                                <button class="period-nav-btn" onclick="shiftPeriod(-1)" title="Período anterior"><i class="fas fa-chevron-left"></i></button>
+                                <span id="period-label" class="period-label">Hoy</span>
+                                <button class="period-nav-btn" onclick="shiftPeriod(1)" title="Período siguiente"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                            <div id="custom-range-panel" class="custom-range-panel hidden">
+                                <label class="range-label">Desde</label>
+                                <input type="date" id="range-from" class="date-input">
+                                <label class="range-label">Hasta</label>
+                                <input type="date" id="range-to" class="date-input">
+                                <button class="apply-range-btn" onclick="applyCustomRange()"><i class="fas fa-check"></i> Aplicar</button>
+                            </div>
                         </div>
                     </div>
                     <div class="header-actions">
@@ -88,6 +102,21 @@
                         <h3>Pedidos</h3>
                         <p id="total-orders-val">0</p>
                         <span class="stat-meta">En el período seleccionado</span>
+                    </div>
+                </div>
+
+                <!-- Expense Breakdown by Category -->
+                <div id="expense-breakdown-section" class="expense-breakdown-section hidden">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-pie"></i> Gastos por Categoría</h3>
+                        <span class="stat-meta" id="expense-breakdown-subtitle">Período seleccionado</span>
+                    </div>
+                    <div class="expense-cat-chart-layout">
+                        <div class="expense-cat-donut-wrap">
+                            <canvas id="expenseCatChart"></canvas>
+                            <div id="expense-cat-center" class="expense-cat-center"></div>
+                        </div>
+                        <div id="expense-breakdown-list" class="expense-breakdown-list"></div>
                     </div>
                 </div>
 
@@ -395,6 +424,9 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
     <script src="menu-data.js"></script>
     <script src="admin.js"></script>
 </body>

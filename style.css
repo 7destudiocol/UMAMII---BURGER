@@ -648,8 +648,8 @@ body {
     .sparks-container {
         display: block;
     }
-    /* Optimización: reducir número de chispas visibles en móvil si es necesario */
-    .spark:nth-child(n+12) {
+    /* Móvil: solo 5 chispas activas, el resto ocultas */
+    .spark:nth-child(n+6) {
         display: none;
     }
 }
@@ -1062,4 +1062,167 @@ body {
 .add-to-cart-btn:hover {
     background: var(--accent-color);
     transform: scale(1.05);
+}
+
+/* ====== SOLD-OUT PRODUCT CARD ====== */
+.product-card.sold-out {
+    opacity: 0.65;
+    pointer-events: auto;
+}
+
+.product-card.sold-out:hover {
+    transform: none;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    border-color: rgba(255, 183, 3, 0.1);
+}
+
+.product-card.sold-out:hover::before {
+    transform: scaleX(0);
+}
+
+.product-card.sold-out .product-image {
+    filter: grayscale(100%);
+}
+
+.product-card.sold-out .product-image-container {
+    cursor: default;
+}
+
+/* Overlay "AGOTADO" sobre la imagen */
+.sold-out-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.52);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sold-out-label {
+    background: rgba(220, 38, 38, 0.92);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    padding: 0.45rem 1.1rem;
+    border-radius: 8px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+
+/* Botón deshabilitado */
+.add-to-cart-btn.sold-out-btn {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.35);
+    cursor: not-allowed;
+    gap: 0.5rem;
+}
+
+.add-to-cart-btn.sold-out-btn:hover {
+    background: rgba(255,255,255,0.08);
+    transform: none;
+}
+
+/* ====== SPICY CARD 🌶️ ====== */
+@keyframes spicy-border-glow {
+    0%   { box-shadow: 0 0 12px #ff4500, 0 0 30px rgba(255,69,0,0.45), inset 0 0 10px rgba(255,69,0,0.1); border-color: #ff4500; }
+    50%  { box-shadow: 0 0 24px #ff6b00, 0 0 55px rgba(255,150,0,0.55), inset 0 0 20px rgba(255,100,0,0.18); border-color: #ffae00; }
+    100% { box-shadow: 0 0 12px #ff4500, 0 0 30px rgba(255,69,0,0.45), inset 0 0 10px rgba(255,69,0,0.1); border-color: #ff4500; }
+}
+
+@keyframes spicy-title-flicker {
+    0%, 100% { text-shadow: 0 0 8px #ff4500, 0 0 16px #ffae00; color: #ff6b00; }
+    50%       { text-shadow: 0 0 14px #ffae00, 0 0 28px #ff4500; color: #ffcc00; }
+}
+
+.product-card.spicy-card {
+    border: 1.5px solid #ff4500;
+    animation: spicy-border-glow 2s infinite ease-in-out;
+}
+
+.product-card.spicy-card .product-title {
+    animation: spicy-title-flicker 1.8s infinite ease-in-out;
+}
+
+/* ====== CROWN CARD 👑 ====== */
+@keyframes crown-shimmer {
+    0%   { box-shadow: 0 0 15px #ffd700, 0 0 35px rgba(255,215,0,0.3), inset 0 0 12px rgba(255,215,0,0.08); border-color: #ffd700; }
+    50%  { box-shadow: 0 0 28px #ffe44d, 0 0 60px rgba(255,215,0,0.55), inset 0 0 22px rgba(255,215,0,0.2); border-color: #fff0a0; }
+    100% { box-shadow: 0 0 15px #ffd700, 0 0 35px rgba(255,215,0,0.3), inset 0 0 12px rgba(255,215,0,0.08); border-color: #ffd700; }
+}
+
+@keyframes crown-title-gleam {
+    0%, 100% { text-shadow: 0 0 8px #ffd700, 0 0 16px rgba(255,215,0,0.6); color: #ffd700; }
+    50%       { text-shadow: 0 0 18px #ffe44d, 0 0 36px rgba(255,215,0,0.9); color: #fff8c0; }
+}
+
+.product-card.crown-card {
+    border: 1.5px solid #ffd700;
+    animation: crown-shimmer 2.5s infinite ease-in-out;
+    background: linear-gradient(145deg, rgba(26,26,26,1) 60%, rgba(255,215,0,0.07));
+}
+
+.product-card.crown-card .product-title {
+    animation: crown-title-gleam 2.5s infinite ease-in-out;
+}
+
+/* ====== HIGHLIGHT YELLOW — descripción **texto** ====== */
+.highlight-yellow {
+    color: #FFD700;
+    font-weight: 700;
+}
+
+/* ====================================================
+   OPTIMIZACIÓN MÓVIL — reducir peso de brillos/efectos
+   ==================================================== */
+@media (max-width: 768px) {
+    /* 1. background-attachment:fixed paraliza el render en iOS/Android */
+    body {
+        background-attachment: scroll;
+    }
+
+    /* 2. Desactivar hover de tarjeta — en táctil no aplica y consume GPU */
+    .product-card:hover {
+        transform: none;
+        box-shadow: var(--shadow-subtle);
+        border-color: rgba(255, 183, 3, 0.15);
+    }
+    .product-card:hover .product-image {
+        transform: none;
+    }
+    .product-card:hover::before {
+        transform: scaleX(0);
+    }
+    .product-card:hover .placeholder-img {
+        opacity: 0.3;
+        filter: drop-shadow(0 0 10px var(--primary-color));
+    }
+
+    /* 3. Reducir glow de tarjetas spicy — mantener estética, bajar intensidad */
+    .product-card.spicy-card {
+        animation-duration: 4s;
+        box-shadow: 0 0 8px rgba(255, 69, 0, 0.35);
+    }
+
+    /* 4. Reducir glow de tarjetas crown */
+    .product-card.crown-card {
+        animation-duration: 4s;
+        box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+    }
+
+    /* 5. Reducir box-shadow del logo */
+    .logo-container .logo {
+        box-shadow: 0 0 8px rgba(255, 183, 3, 0.15);
+    }
+
+    /* 6. Emberize el modal de fuego es caro: simplificar */
+    .spicy-fire .modal-content {
+        animation: none;
+        box-shadow: 0 0 16px #ff4d00;
+    }
+    .spicy-fire #modal-caption {
+        animation: none;
+        text-shadow: 0 0 8px #ffae00;
+    }
 }

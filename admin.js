@@ -7,6 +7,9 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // ---- Global State ----
 let _supabase = null;
 let currentFilter = 'day';
+let periodOffset    = 0;      // nav offset from current period (0 = current)
+let customRangeFrom = '';     // ISO date string for custom range start
+let customRangeTo   = '';     // ISO date string for custom range end
 let cart = {};           // { productName: { qty, price } }
 let productsSearchQuery = '';
 let currentSalesCat = 'all';
@@ -82,12 +85,13 @@ async function loadTabData(tabId) {
 // ============================================================
 async function loadStats() {
     if (!_supabase) return;
-    const startDate = getDateRange();
+    const { start, end } = getDateRange();
+    updatePeriodLabel();
 
     const [{ data: sales }, { data: others }, { data: expenses }] = await Promise.all([
-        _supabase.from('umamii_sales').select('*, products:umamii_products(name)').gte('sale_date', startDate),
-        _supabase.from('umamii_other_income').select('*').gte('income_date', startDate),
-        _supabase.from('umamii_expenses').select('*').gte('expense_date', startDate)
+        _supabase.from('umamii_sales').select('*, products:umamii_products(name)').gte('sale_date', start).lte('sale_date', end),
+        _supabase.from('umamii_other_income').select('*').gte('income_date', start).lte('income_date', end),
+        _supabase.from('umamii_expenses').select('*').gte('expense_date', start).lte('expense_date', end)
     ]);
 
     const totalSales    = sales   ? sales.reduce((a, s) => a + parseFloat(s.total_price), 0) : 0;
@@ -101,8 +105,118 @@ async function loadStats() {
     document.getElementById('cash-flow-val').innerText     = `$${(totalIncome - totalExpenses).toLocaleString()}`;
     document.getElementById('total-orders-val').innerText  = totalOrders;
 
+    renderExpenseBreakdown(expenses || []);
     loadMonthlyFlow();
     loadTopProducts();
+}
+
+// ============================================================
+// DASHBOARD — EXPENSE BREAKDOWN BY CATEGORY
+// ============================================================
+const EXPENSE_CAT_COLORS = {
+    'Insumos':          '#ff6b6b',
+    'Servicios':        '#feca57',
+    'Arriendo':         '#ff9f43',
+    'Personal':         '#48dbfb',
+    'Administrativo':   '#a29bfe',
+    'Otros':            '#636e72'
+};
+
+const EXPENSE_CAT_LABELS = {
+    'Insumos':          'Insumos',
+    'Servicios':        'Servicios Públicos',
+    'Arriendo':         'Arriendo',
+    'Personal':         'Personal',
+    'Administrativo':   'Administrativo',
+    'Otros':            'Otros'
+};
+
+function renderExpenseBreakdown(expenses) {
+    const section = document.getElementById('expense-breakdown-section');
+    if (!section) return;
+
+    if (!expenses || expenses.length === 0) {
+        section.classList.add('hidden');
+        if (window.expenseCatChart) { window.expenseCatChart.destroy(); window.expenseCatChart = null; }
+        return;
+    }
+    section.classList.remove('hidden');
+
+    // Group by category
+    const grouped = {};
+    expenses.forEach(e => {
+        const cat = e.category || 'Otros';
+        if (!grouped[cat]) grouped[cat] = 0;
+        grouped[cat] += parseFloat(e.amount) || 0;
+    });
+
+    const total = Object.values(grouped).reduce((a, b) => a + b, 0);
+    const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
+
+    // ── Donut chart ──
+    const canvas = document.getElementById('expenseCatChart');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (window.expenseCatChart) window.expenseCatChart.destroy();
+        const chartLabels = sorted.map(([cat]) => EXPENSE_CAT_LABELS[cat] || cat);
+        const chartValues = sorted.map(([, amt]) => amt);
+        const chartColors = sorted.map(([cat]) => EXPENSE_CAT_COLORS[cat] || '#888');
+
+        window.expenseCatChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    data: chartValues,
+                    backgroundColor: chartColors,
+                    borderColor: '#1a1a1a',
+                    borderWidth: 3,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                                return ` $${ctx.parsed.toLocaleString()} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Center label: total
+        const center = document.getElementById('expense-cat-center');
+        if (center) {
+            center.innerHTML = `<span class="exp-center-label">Total</span><span class="exp-center-amount">$${total.toLocaleString()}</span>`;
+        }
+    }
+
+    // ── Breakdown list ──
+    document.getElementById('expense-breakdown-list').innerHTML = sorted.map(([cat, amount]) => {
+        const pct = total > 0 ? ((amount / total) * 100).toFixed(1) : 0;
+        const color = EXPENSE_CAT_COLORS[cat] || '#888';
+        const label = EXPENSE_CAT_LABELS[cat] || cat;
+        return `
+        <div class="exp-breakdown-row">
+            <div class="exp-breakdown-left">
+                <span class="exp-breakdown-dot" style="background:${color}"></span>
+                <span class="exp-breakdown-cat">${label}</span>
+            </div>
+            <div class="exp-breakdown-bar-wrap">
+                <div class="exp-breakdown-bar" style="width:${pct}%;background:${color}80"></div>
+            </div>
+            <span class="exp-breakdown-pct">${pct}%</span>
+            <span class="exp-breakdown-amount" style="color:${color}">$${amount.toLocaleString()}</span>
+        </div>`;
+    }).join('');
 }
 
 // ============================================================
@@ -680,32 +794,29 @@ function parseCOPInput(val) {
 }
 
 async function loadProducts() {
-    const { data } = await _supabase
+    // Try ordering by sort_order (requires migration). Fall back to category+name if column doesn't exist yet.
+    let { data, error } = await _supabase
         .from('umamii_products')
         .select('*')
-        .order('category', { ascending: true });
+        .order('sort_order', { ascending: true })
+        .order('category', { ascending: true })
+        .order('name', { ascending: true });
 
-    // Normalize categories to lowercase to avoid duplicates
-    _productsCache = (data || []).map(p => ({ ...p, category: (p.category || '').toLowerCase() }));
+    if (error) {
+        // sort_order column likely doesn't exist yet — fallback query
+        const fallback = await _supabase
+            .from('umamii_products')
+            .select('*')
+            .order('category', { ascending: true })
+            .order('name', { ascending: true });
+        data = fallback.data;
+    }
 
-    // Table
-    const tbody = document.querySelector('#products-table tbody');
-    tbody.innerHTML = _productsCache.map(p => {
-        const imgSrc = p.image ? `assets/img/${p.image}` : `assets/img/Logo (2).webp`;
-        return `
-        <tr>
-            <td><img src="${imgSrc}" class="product-table-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}"></td>
-            <td><b>${p.name}</b></td>
-            <td>${p.category}</td>
-            <td class="primary">${formatCOP(p.price)}</td>
-            <td style="display:flex;gap:0.5rem">
-                <button class="action-btn detail-btn" onclick="openEditProductModal('${p.id}','${p.name.replace(/'/g,"\\'")}',${ p.price},'${p.category}','${p.image||''}','${(p.description||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')"><i class="fas fa-pen"></i> Editar</button>
-                <button class="delete-btn" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
-            </td>
-        </tr>`;
-    }).join('') || '<tr><td colspan="5" style="color:#888;text-align:center;padding:2rem">Sin productos</td></tr>';
+    // Normalize categories to lowercase, preserve sold_out flag
+    _productsCache = (data || []).map(p => ({ ...p, category: (p.category || '').toLowerCase(), sold_out: !!p.sold_out }));
 
-    // Visual grid
+    // Table + Visual grid
+    renderProductsTable(_productsCache);
     renderProductsCatFilters();
     renderProductsVisualGrid(currentProdCat);
 }
@@ -715,14 +826,25 @@ function renderProductsTable(list) {
     if (!tbody) return;
     tbody.innerHTML = list.map(p => {
         const imgSrc = p.image ? `assets/img/${p.image}` : `assets/img/Logo (2).webp`;
+        const soldLabel = p.sold_out
+            ? `<span class="badge-agotado">Agotado</span>`
+            : `<span class="badge-disponible">Disponible</span>`;
+        const isSpicy = p.name.includes('🌶️') || p.name.includes('🌶');
+        const isCrown = p.name.includes('👑');
+        const rowExtra = (isSpicy ? ' spicy-card' : '') + (isCrown ? ' crown-card' : '');
         return `
-        <tr>
+        <tr class="${p.sold_out ? 'row-agotado' : ''}${rowExtra}">
             <td><img src="${imgSrc}" class="product-table-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}"></td>
-            <td><b>${p.name}</b></td>
+            <td><b>${p.name}</b><br>${soldLabel}</td>
             <td>${catLabel(p.category)}</td>
             <td class="primary">${formatCOP(p.price)}</td>
-            <td style="display:flex;gap:0.5rem">
-                <button class="action-btn detail-btn" onclick="openEditProductModal('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price},'${p.category}','${p.image||''}','${(p.description||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')"><i class="fas fa-pen"></i> Editar</button>
+            <td style="display:flex;gap:0.5rem;flex-wrap:wrap">
+                <button class="action-btn detail-btn" onclick="openEditProductModal('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price},'${p.category}','${p.image||''}','${(p.description||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">
+                    <i class="fas fa-pen"></i> Editar
+                </button>
+                <button class="action-btn ${p.sold_out ? 'btn-reactivar' : 'btn-agotado'}" onclick="toggleProductSoldOut('${p.id}',${p.sold_out})">
+                    <i class="fas ${p.sold_out ? 'fa-check-circle' : 'fa-ban'}"></i> ${p.sold_out ? 'Reactivar' : 'Agotado'}
+                </button>
                 <button class="delete-btn" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
             </td>
         </tr>`;
@@ -774,21 +896,71 @@ function renderProductsVisualGrid(catId) {
         const nameSafe = p.name.replace(/'/g, "\\'");
         const imgSafe  = (p.image || '').replace(/'/g, "\\'");
         const descSafe = (p.description || '').replace(/'/g, "\\'").replace(/\n/g, ' ');
+        const agotadoOverlay = p.sold_out ? `<div class="agotado-overlay"><span>AGOTADO</span></div>` : '';
+        const isSpicyCard = p.name.includes('🌶️') || p.name.includes('🌶');
+        const isCrownCard = p.name.includes('👑');
+        const extraClasses = (isSpicyCard ? ' spicy-card' : '') + (isCrownCard ? ' crown-card' : '');
         return `
-        <div class="product-mini-card product-mini-editable">
-            <img src="${imgSrc}" class="product-mini-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}">
+        <div class="product-mini-card product-mini-editable${p.sold_out ? ' product-mini-agotado' : ''}${extraClasses}" data-id="${p.id}">
+            <div class="drag-handle" title="Arrastrar para reordenar"><i class="fas fa-grip-vertical"></i></div>
+            <div style="position:relative">
+                <img src="${imgSrc}" class="product-mini-img" onerror="this.src='assets/img/Logo (2).webp'" alt="${p.name}">
+                ${agotadoOverlay}
+            </div>
             <div class="product-mini-info">
-                <span class="product-mini-cat">${p.category}</span>
+                <span class="product-mini-cat">${catLabel(p.category)}</span>
                 <h4>${p.name}</h4>
                 <p class="product-mini-price">${formatCOP(p.price)}</p>
             </div>
             <div class="product-mini-actions">
                 <button class="edit-price-btn" onclick="openEditProductModal('${p.id}','${nameSafe}',${p.price},'${p.category}','${imgSafe}','${descSafe}')">
-                    <i class="fas fa-pen"></i> Editar precio
+                    <i class="fas fa-pen"></i> Editar
+                </button>
+                <button class="sold-out-toggle-btn ${p.sold_out ? 'btn-reactivar' : 'btn-agotado'}" onclick="toggleProductSoldOut('${p.id}',${p.sold_out})">
+                    <i class="fas ${p.sold_out ? 'fa-check-circle' : 'fa-ban'}"></i> ${p.sold_out ? 'Reactivar' : 'Marcar agotado'}
+                </button>
+                <button class="sold-out-toggle-btn btn-eliminar" onclick="deleteProduct('${p.id}')">
+                    <i class="fas fa-trash"></i> Eliminar
                 </button>
             </div>
         </div>`;
     }).join('');
+
+    // Init drag-and-drop reordering with SortableJS
+    if (typeof Sortable !== 'undefined') {
+        Sortable.create(grid, {
+            animation: 180,
+            handle: '.drag-handle',
+            ghostClass: 'product-mini-drag-ghost',
+            chosenClass: 'product-mini-drag-chosen',
+            onEnd: async function () {
+                const ids = [...grid.querySelectorAll('[data-id]')].map(el => el.dataset.id);
+                await saveProductOrder(ids);
+            }
+        });
+    }
+}
+
+async function saveProductOrder(orderedIds) {
+    // Batch update sort_order in Supabase
+    const updates = orderedIds.map((id, index) =>
+        _supabase.from('umamii_products').update({ sort_order: index }).eq('id', id)
+    );
+    await Promise.all(updates);
+    // Sync local cache order without full reload so grid position doesn't jump
+    const byId = Object.fromEntries(_productsCache.map(p => [p.id, p]));
+    _productsCache = orderedIds
+        .map(id => byId[id])
+        .filter(Boolean)
+        .concat(_productsCache.filter(p => !orderedIds.includes(p.id)));
+    // Refresh the full table too so it reflects new order
+    renderProductsTable(_productsCache);
+}
+
+async function toggleProductSoldOut(id, currentStatus) {
+    const newStatus = !currentStatus;
+    await _supabase.from('umamii_products').update({ sold_out: newStatus }).eq('id', id);
+    await loadProducts();
 }
 
 function openEditProductModal(id, name, price, category, image, description) {
@@ -1152,19 +1324,99 @@ async function exportDataToCSV() {
 // HELPERS
 // ============================================================
 function getDateRange() {
-    let s = new Date(); s.setHours(0, 0, 0, 0);
-    if (currentFilter === 'week')  s.setHours(-24 * ((s.getDay() || 7) - 1));
-    else if (currentFilter === 'month') s.setDate(1);
-    else if (currentFilter === 'year')  { s.setMonth(0); s.setDate(1); }
-    return s.toISOString();
+    if (currentFilter === 'custom') {
+        const s = customRangeFrom ? new Date(customRangeFrom + 'T00:00:00') : new Date();
+        const e = customRangeTo   ? new Date(customRangeTo   + 'T23:59:59') : new Date();
+        if (!customRangeTo) e.setHours(23, 59, 59, 999);
+        return { start: s.toISOString(), end: e.toISOString() };
+    }
+    const now = new Date();
+    let start, end;
+    if (currentFilter === 'day') {
+        start = new Date(now); start.setDate(start.getDate() + periodOffset); start.setHours(0, 0, 0, 0);
+        end   = new Date(start); end.setHours(23, 59, 59, 999);
+    } else if (currentFilter === 'week') {
+        const dow = (now.getDay() || 7) - 1; // 0=Mon
+        start = new Date(now); start.setDate(now.getDate() - dow + periodOffset * 7); start.setHours(0, 0, 0, 0);
+        end   = new Date(start); end.setDate(start.getDate() + 6); end.setHours(23, 59, 59, 999);
+    } else if (currentFilter === 'month') {
+        start = new Date(now.getFullYear(), now.getMonth() + periodOffset, 1);
+        end   = new Date(now.getFullYear(), now.getMonth() + periodOffset + 1, 0, 23, 59, 59, 999);
+    } else { // year
+        start = new Date(now.getFullYear() + periodOffset, 0, 1);
+        end   = new Date(now.getFullYear() + periodOffset, 11, 31, 23, 59, 59, 999);
+    }
+    return { start: start.toISOString(), end: end.toISOString() };
+}
+
+function getPeriodLabel() {
+    if (currentFilter === 'custom') {
+        if (customRangeFrom && customRangeTo) return `${customRangeFrom} → ${customRangeTo}`;
+        return 'Rango personalizado';
+    }
+    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const fullMonths = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const now = new Date();
+    if (currentFilter === 'day') {
+        const d = new Date(now); d.setDate(d.getDate() + periodOffset);
+        if (periodOffset === 0) return 'Hoy — ' + d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+        if (periodOffset === -1) return 'Ayer — ' + d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+        return d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    if (currentFilter === 'week') {
+        const dow = (now.getDay() || 7) - 1;
+        const s = new Date(now); s.setDate(now.getDate() - dow + periodOffset * 7); s.setHours(0,0,0,0);
+        const e = new Date(s); e.setDate(s.getDate() + 6);
+        return `${s.getDate()} ${months[s.getMonth()]} – ${e.getDate()} ${months[e.getMonth()]} ${e.getFullYear()}`;
+    }
+    if (currentFilter === 'month') {
+        const d = new Date(now.getFullYear(), now.getMonth() + periodOffset, 1);
+        return `${fullMonths[d.getMonth()]} ${d.getFullYear()}`;
+    }
+    return String(now.getFullYear() + periodOffset);
+}
+
+function updatePeriodLabel() {
+    const lbl = document.getElementById('period-label');
+    if (lbl) lbl.textContent = getPeriodLabel();
+    // Hide nav arrows in custom mode
+    const nav = document.getElementById('period-nav');
+    if (nav) nav.style.visibility = currentFilter === 'custom' ? 'hidden' : 'visible';
+}
+
+function shiftPeriod(dir) {
+    if (currentFilter === 'custom') return;
+    periodOffset += dir;
+    loadStats();
+}
+
+function applyCustomRange() {
+    const from = document.getElementById('range-from').value;
+    const to   = document.getElementById('range-to').value;
+    if (!from || !to) { alert('Selecciona ambas fechas para aplicar el rango.'); return; }
+    if (from > to) { alert('La fecha de inicio debe ser anterior a la fecha final.'); return; }
+    customRangeFrom = from;
+    customRangeTo   = to;
+    loadStats();
 }
 
 function setFilter(f) {
     currentFilter = f;
-    document.querySelectorAll('.filter-btn').forEach(b => {
-        const map = { day: 'hoy', week: 'semana', month: 'mes', year: 'año' };
-        b.classList.toggle('active', b.innerText.toLowerCase() === map[f]);
+    periodOffset  = 0;
+    document.querySelectorAll('.time-filters .filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === f);
     });
+    // Show/hide custom range panel
+    const panel = document.getElementById('custom-range-panel');
+    if (panel) panel.classList.toggle('hidden', f !== 'custom');
+    // Pre-fill today's dates when switching to custom
+    if (f === 'custom') {
+        const today = new Date().toISOString().split('T')[0];
+        const fromEl = document.getElementById('range-from');
+        const toEl   = document.getElementById('range-to');
+        if (fromEl && !fromEl.value) fromEl.value = today;
+        if (toEl   && !toEl.value)   toEl.value   = today;
+    }
     loadStats();
 }
 
