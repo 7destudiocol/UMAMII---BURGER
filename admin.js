@@ -407,7 +407,10 @@ async function openMonthDetail(monthStr, monthName) {
 
 function closeMonthDetail() {
     document.getElementById('month-detail-modal').classList.add('hidden');
-    loadMonthlyFlow();
+    // Always call with valid dates
+    const validStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+    const validEnd = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+    loadMonthlyFlow(validStart, validEnd);
 }
 
 async function deleteSale(id, monthStr, monthName) {
