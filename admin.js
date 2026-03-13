@@ -106,7 +106,7 @@ async function loadStats() {
     document.getElementById('total-orders-val').innerText  = totalOrders;
 
     renderExpenseBreakdown(expenses || []);
-    loadMonthlyFlow();
+    loadMonthlyFlow(start, end);
     loadTopProducts();
 }
 
@@ -222,8 +222,12 @@ function renderExpenseBreakdown(expenses) {
 // ============================================================
 // DASHBOARD — MONTHLY FLOW
 // ============================================================
-async function loadMonthlyFlow() {
-    const { data: monthlyData } = await _supabase.from('UMAMII_monthly_cash_flow').select('*');
+async function loadMonthlyFlow(start, end) {
+    const { data: monthlyData } = await _supabase
+        .from('UMAMII_monthly_cash_flow')
+        .select('*')
+        .gte('month', start)
+        .lte('month', end);
     if (!monthlyData) return;
     renderMainChart(monthlyData);
     renderMonthlyTable(monthlyData);
