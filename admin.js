@@ -106,7 +106,10 @@ async function loadStats() {
     document.getElementById('total-orders-val').innerText  = totalOrders;
 
     renderExpenseBreakdown(expenses || []);
-    loadMonthlyFlow(start, end);
+    // Validar fechas
+    const validStart = start || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+    const validEnd = end || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+    loadMonthlyFlow(validStart, validEnd);
     loadTopProducts();
 }
 
@@ -137,7 +140,10 @@ function renderExpenseBreakdown(expenses) {
 
     if (!expenses || expenses.length === 0) {
         section.classList.add('hidden');
-        if (window.expenseCatChart) { window.expenseCatChart.destroy(); window.expenseCatChart = null; }
+        if (window.expenseCatChart && typeof window.expenseCatChart.destroy === 'function') {
+            window.expenseCatChart.destroy();
+            window.expenseCatChart = null;
+        }
         return;
     }
     section.classList.remove('hidden');
@@ -157,7 +163,7 @@ function renderExpenseBreakdown(expenses) {
     const canvas = document.getElementById('expenseCatChart');
     if (canvas) {
         const ctx = canvas.getContext('2d');
-        if (window.expenseCatChart) window.expenseCatChart.destroy();
+        if (window.expenseCatChart && typeof window.expenseCatChart.destroy === 'function') window.expenseCatChart.destroy();
         const chartLabels = sorted.map(([cat]) => EXPENSE_CAT_LABELS[cat] || cat);
         const chartValues = sorted.map(([, amt]) => amt);
         const chartColors = sorted.map(([cat]) => EXPENSE_CAT_COLORS[cat] || '#888');
@@ -223,12 +229,43 @@ function renderExpenseBreakdown(expenses) {
 // DASHBOARD — MONTHLY FLOW
 // ============================================================
 async function loadMonthlyFlow(start, end) {
-    const { data: monthlyData } = await _supabase
-        .from('UMAMII_monthly_cash_flow')
-        .select('*')
-        .gte('month', start)
-        .lte('month', end);
-    if (!monthlyData) return;
+    // Consultar ventas y gastos directamente
+    const [{ data: sales, error: salesError }, { data: expenses, error: expensesError }] = await Promise.all([
+        _supabase.from('umamii_sales').select('sale_date, total_price').gte('sale_date', start).lte('sale_date', end),
+        _supabase.from('umamii_expenses').select('expense_date, amount').gte('expense_date', start).lte('expense_date', end)
+    ]);
+    if (salesError) console.error('MonthlyFlow sales error:', salesError);
+    if (expensesError) console.error('MonthlyFlow expenses error:', expensesError);
+    // Agrupar por mes
+    const salesByMonth = {};
+    (sales || []).forEach(s => {
+        const m = s.sale_date.slice(0,7); // YYYY-MM
+        salesByMonth[m] = (salesByMonth[m] || 0) + parseFloat(s.total_price);
+    });
+    const expensesByMonth = {};
+    (expenses || []).forEach(e => {
+        const m = e.expense_date.slice(0,7); // YYYY-MM
+        expensesByMonth[m] = (expensesByMonth[m] || 0) + parseFloat(e.amount);
+    });
+    // Unir meses
+    const allMonths = Array.from(new Set([...Object.keys(salesByMonth), ...Object.keys(expensesByMonth)])).sort();
+    const monthlyData = allMonths.map(m => {
+        const income = salesByMonth[m] || 0;
+        const expenses = expensesByMonth[m] || 0;
+        return {
+            month: m + '-01', // Para compatibilidad con renderMainChart
+            income,
+            expenses,
+            cash_flow: income - expenses
+        };
+    });
+    console.log('MonthlyFlow data:', monthlyData);
+    if (!monthlyData || monthlyData.length === 0) {
+        console.warn('MonthlyFlow: No data for chart');
+        renderMainChart([]);
+        renderMonthlyTable([]);
+        return;
+    }
     renderMainChart(monthlyData);
     renderMonthlyTable(monthlyData);
 }
@@ -398,11 +435,13 @@ async function deleteOtherIncomeFromModal(id, monthStr, monthName) {
 // DASHBOARD — TOP PRODUCTS (Donut + Podium)
 // ============================================================
 async function loadTopProducts() {
-    const { data: sales } = await _supabase
+    const { data: sales, error } = await _supabase
         .from('umamii_sales')
         .select('quantity, products:umamii_products(name)');
-
+    console.log('TopProducts sales:', sales);
+    if (error) console.error('TopProducts error:', error);
     if (!sales || sales.length === 0) {
+        console.warn('TopProducts: No sales data');
         renderDonutChart([]);
         renderPodium([]);
         return;
@@ -544,6 +583,10 @@ function renderDashboardProducts(catId) {
 function initSalesCart() {
     initSupabase();
     cart = {};
+    // Eliminar cualquier persistencia previa
+    if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('umamii_cart');
+    }
     renderSalesCatFilters();
     renderSalesGrid('all');
 }

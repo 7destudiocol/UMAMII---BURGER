@@ -1,3 +1,9 @@
+// Vaciar el carrito al recargar la página
+window.addEventListener('load', () => {
+    cart = [];
+    if (typeof saveCart === 'function') saveCart();
+    if (typeof renderCartSummary === 'function') renderCartSummary();
+});
 /**
  * UMAMI Burger - Logic and Data
  */
