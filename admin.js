@@ -1325,21 +1325,12 @@ function timeSince(date) {
 // SYNC MENU → DB  (now includes image column)
 // ============================================================
 async function syncMenuWithDB() {
-    // Upsert all menu products (including images) each login
-    const upsertData = menuData.products.map(p => ({
-        name: p.name,
-        price: p.price,
-        category: (p.category || 'general').toLowerCase(),
-        image: p.image || null
-    }));
-    // Insert only new ones (avoid overwriting custom DB entries)
+    // NOTE: Previously the admin panel inserted missing products from `menuData` on each login.
+    // That caused products deleted via the admin UI to be recreated later. To avoid resurrecting
+    // deleted items, we no longer insert new products automatically. If you want to add new
+    // menu items, use the Add Product workflow in the admin UI.
+    // We still update image fields for existing DB products that don't have an image yet.
     const { data: existing } = await _supabase.from('umamii_products').select('name, image');
-    const existingNames = new Set(existing?.map(p => p.name) || []);
-    const newProducts = upsertData.filter(p => !existingNames.has(p.name));
-    if (newProducts.length > 0) {
-        await _supabase.from('umamii_products').insert(newProducts);
-    }
-    // Update image for products that have no image yet
     const noImageProducts = (existing || []).filter(p => !p.image);
     for (const ep of noImageProducts) {
         const menuItem = menuData.products.find(p => p.name === ep.name);
