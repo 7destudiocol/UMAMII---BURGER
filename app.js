@@ -330,7 +330,7 @@ async function handleWhatsAppOrder() {
         return;
     }
 
-    let message = "¡Hola UMAMI! 🍔 Venía del menú virtual y quiero hacer este pedido:\n\n";
+    let message = "¡Hola UMAMI! 🍔 Vengo del menú virtual y quisiera hacer este pedido:\n\n";
     let total = 0;
 
     cart.forEach(item => {
@@ -344,8 +344,15 @@ async function handleWhatsAppOrder() {
 
     const customerName = document.getElementById('customer-name')?.value.trim() || '';
     const customerNote = document.getElementById('customer-note')?.value.trim() || '';
-    if (customerNote) message += `\n\n📍 ${customerNote}`;
-    message += "\n\n¿Me confirman para pasarles mis datos de entrega? ¡Gracias! ✨";
+
+    if (customerName || customerNote) {
+        message += `\n\n---\n`;
+        if (customerName) message += `*Nombre:* ${customerName}\n`;
+        if (customerNote) message += `*Dirección:* ${customerNote}\n`;
+        message += `---\n`;
+    }
+
+    message += "\n\nMuchas gracias! ✨";
 
     // Save order to Supabase (fire-and-forget — don't block WhatsApp)
     try {
