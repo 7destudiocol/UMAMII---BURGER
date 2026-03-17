@@ -42,7 +42,7 @@ async function initDashboard() {
     initSupabase();
     await syncMenuWithDB();
     loadStats();
-    initSalesCart();
+    await initSalesCart();
     updateOrderBadge();
     subscribeToOrders();
 }
@@ -583,8 +583,10 @@ function renderDashboardProducts(catId) {
 // ============================================================
 // SALES CART
 // ============================================================
-function initSalesCart() {
+async function initSalesCart() {
     initSupabase();
+    // Cargar productos desde la BD para asegurar imágenes y precios sincronizados
+    await loadProducts();
     cart = {};
     // Eliminar cualquier persistencia previa
     if (typeof localStorage !== 'undefined') {
@@ -618,7 +620,9 @@ function filterSalesBySearch(query) {
 function renderSalesGrid(catId) {
     const grid = document.getElementById('sales-product-grid');
     if (!grid) return;
-    let list = catId === 'all' ? menuData.products : menuData.products.filter(p => p.category === catId);
+    // Prefer products loaded from DB (_productsCache). Fallback to menuData if DB empty.
+    const source = (_productsCache && _productsCache.length > 0) ? _productsCache : menuData.products;
+    let list = catId === 'all' ? source : source.filter(p => (p.category || '').toLowerCase() === catId);
     
     if (salesSearchQuery) {
         list = list.filter(p => p.name.toLowerCase().includes(salesSearchQuery));
