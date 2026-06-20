@@ -703,6 +703,31 @@ function renderCartSummary() {
 
     const itemCount = entries.reduce((sum, [, v]) => sum + v.qty, 0);
     updateMobileCartBar(itemCount, total);
+    calculateChange();
+}
+
+function calculateChange() {
+    const entries = Object.entries(cart).filter(([, v]) => v.qty > 0);
+    const total = entries.reduce((sum, [, v]) => sum + v.price * v.qty, 0);
+    const amountPaidInput = document.getElementById('amount-paid');
+    const changeAmountEl = document.getElementById('change-amount');
+    
+    if (!amountPaidInput || !changeAmountEl) return;
+    
+    const amountPaid = parseCOPInput(amountPaidInput.value) || 0;
+    const change = amountPaid - total;
+    
+    if (amountPaid === 0 || change < 0) {
+        changeAmountEl.innerText = '$0';
+        changeAmountEl.parentElement.classList.remove('negative');
+        if (change < 0 && amountPaid > 0) {
+             changeAmountEl.innerText = 'Faltan ' + formatCOP(Math.abs(change));
+             changeAmountEl.parentElement.classList.add('negative');
+        }
+    } else {
+        changeAmountEl.innerText = formatCOP(change);
+        changeAmountEl.parentElement.classList.remove('negative');
+    }
 }
 
 function updateMobileCartBar(itemCount, total) {
@@ -725,6 +750,8 @@ function scrollToCartSummary() {
 
 function clearCart() {
     cart = {};
+    const amountPaidInput = document.getElementById('amount-paid');
+    if (amountPaidInput) amountPaidInput.value = '';
     renderSalesGrid(currentSalesCat);
     renderCartSummary();
 }

@@ -237,6 +237,17 @@
                                 <span>Total:</span>
                                 <b id="cart-total-amount">$0</b>
                             </div>
+                            <div class="pos-change-calculator">
+                                <label for="amount-paid">Efectivo recibido:</label>
+                                <div class="amount-paid-input-group">
+                                    <span class="currency-symbol">$</span>
+                                    <input type="text" id="amount-paid" placeholder="0" oninput="formatCOPInput(this); calculateChange()">
+                                </div>
+                                <div class="change-result-row">
+                                    <span>Cambio (Vuelta):</span>
+                                    <b id="change-amount">$0</b>
+                                </div>
+                            </div>
                             <button class="confirm-sale-btn" onclick="submitCartSale()">
                                 <i class="fas fa-check-circle"></i> Confirmar Venta
                             </button>
@@ -247,7 +258,7 @@
                                 <i class="fas fa-tag"></i> + Ítem personalizado
                             </button>
                             <div id="custom-item-form" class="custom-item-form hidden">
-                                <input type="text" id="custom-item-name" placeholder="Ej: Domicilio, descuento...">
+                                <input type="text" id="custom-item-name" placeholder="Ej: Gaseosa, Domicilio, Descuento...">
                                 <input type="text" id="custom-item-price" placeholder="Precio" oninput="formatCOPInput(this)">
                                 <button type="button" onclick="addCustomItemToCart()"><i class="fas fa-plus"></i> Agregar</button>
                             </div>
