@@ -17,6 +17,7 @@ let currentDashCat  = 'all';
 let currentProdCat  = 'all';
 let salesSearchQuery = '';
 let _productsCache  = [];
+let _categoriesCache = [];
 
 // ============================================================
 // INIT
@@ -40,6 +41,7 @@ function checkAdminPassword() {
 
 async function initDashboard() {
     initSupabase();
+    await loadCategories();
     await syncMenuWithDB();
     loadStats();
     await initSalesCart();
@@ -933,16 +935,15 @@ function renderProductsTable(list) {
 }
 
 // Visual catalog in products tab
-const CAT_DISPLAY = {
-    hamburguesas: 'Hamburguesas', perros: 'Perros', sandwiches: 'Sándwiches',
-    salchipapas: 'Salchipapas', adiciones: 'Adiciones', bebidas: 'Bebidas'
+const catLabel = (id) => {
+    const c = _categoriesCache.find(x => x.id === id);
+    return c ? c.name : id.charAt(0).toUpperCase() + id.slice(1);
 };
-const catLabel = (id) => CAT_DISPLAY[id] || id.charAt(0).toUpperCase() + id.slice(1);
 
 function renderProductsCatFilters() {
     const wrap = document.getElementById('products-cat-filters');
     if (!wrap) return;
-    const cats = [...new Set(_productsCache.map(p => p.category))].sort();
+    const cats = _categoriesCache.filter(c => !c.is_hidden).map(c => c.id);
     wrap.innerHTML = `<button class="cat-filter-btn active" onclick="filterProductsGrid('all',this)">Todos</button>` +
         cats.map(c =>
             `<button class="cat-filter-btn" onclick="filterProductsGrid('${c}',this)">${catLabel(c)}</button>`
@@ -1048,7 +1049,7 @@ function openEditProductModal(id, name, price, category, image, description) {
     document.getElementById('modal-title').innerText = 'Editar Producto';
     const fields = document.getElementById('dynamic-fields');
     document.getElementById('modal-container').classList.remove('hidden');
-    const cats = [...new Set(_productsCache.map(p => p.category))].sort();
+    const cats = _categoriesCache.filter(c => !c.is_hidden).map(c => c.id);
     fields.innerHTML = `
         <input type="hidden" id="prod-edit-id" value="${id}">
         <input type="text" id="prod-name" value="${name}" placeholder="Nombre del producto" required>
@@ -1064,6 +1065,105 @@ async function deleteProduct(id) {
     if (confirm('¿Eliminar producto?')) {
         await _supabase.from('umamii_products').delete().eq('id', id);
         loadProducts();
+    }
+}
+
+// ============================================================
+// CATEGORY MANAGEMENT
+// ============================================================
+async function loadCategories() {
+    const { data, error } = await _supabase
+        .from('umamii_categories')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+    if (error) {
+        console.warn('Error fetching categories (maybe table missing?):', error);
+        _categoriesCache = [
+            { id: 'hamburguesas', name: 'Hamburguesas', is_hidden: false },
+            { id: 'perros', name: 'Perros', is_hidden: false },
+            { id: 'sandwiches', name: 'Sándwiches', is_hidden: false },
+            { id: 'salchipapas', name: 'Salchipapas', is_hidden: false },
+            { id: 'adiciones', name: 'Adiciones', is_hidden: false },
+            { id: 'bebidas', name: 'Bebidas', is_hidden: false }
+        ];
+    } else {
+        _categoriesCache = data || [];
+    }
+}
+
+function openCategoryManager() {
+    document.getElementById('category-manager-modal').classList.remove('hidden');
+    renderCategoryManager();
+}
+
+function closeCategoryManager() {
+    document.getElementById('category-manager-modal').classList.add('hidden');
+    // Refresh products view to update filters
+    renderProductsCatFilters();
+    renderProductsVisualGrid(currentProdCat);
+}
+
+function renderCategoryManager() {
+    const list = document.getElementById('categories-list');
+    list.innerHTML = _categoriesCache.map(c => `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid var(--glass-border);">
+            <div style="flex: 1; ${c.is_hidden ? 'opacity: 0.5; text-decoration: line-through;' : ''}">
+                <strong style="color: white; font-size: 0.95rem;">${c.name}</strong>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick="toggleCategoryHidden('${c.id}', ${c.is_hidden})" style="background: transparent; color: ${c.is_hidden ? 'var(--success)' : 'var(--text-gray)'}; border: 1px solid var(--glass-border); border-radius: 6px; padding: 0.4rem 0.6rem; font-size: 0.8rem; cursor: pointer;">
+                    <i class="fas ${c.is_hidden ? 'fa-eye' : 'fa-eye-slash'}"></i> ${c.is_hidden ? 'Mostrar' : 'Ocultar'}
+                </button>
+                <button onclick="deleteCategory('${c.id}')" style="background: transparent; color: var(--error); border: 1px solid rgba(231,76,60,0.3); border-radius: 6px; padding: 0.4rem 0.6rem; font-size: 0.8rem; cursor: pointer;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function addCategory() {
+    const input = document.getElementById('new-category-name');
+    const name = input.value.trim();
+    if (!name) return;
+
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const sort_order = _categoriesCache.length + 1;
+
+    const { error } = await _supabase.from('umamii_categories').insert([{ id, name, sort_order, is_hidden: false }]);
+    
+    if (error) {
+        alert('Error al añadir categoría. Asegúrate de haber ejecutado el script SQL.');
+        console.error(error);
+    } else {
+        input.value = '';
+        await loadCategories();
+        renderCategoryManager();
+    }
+}
+
+async function toggleCategoryHidden(id, currentHidden) {
+    const { error } = await _supabase.from('umamii_categories').update({ is_hidden: !currentHidden }).eq('id', id);
+    if (!error) {
+        await loadCategories();
+        renderCategoryManager();
+    }
+}
+
+async function deleteCategory(id) {
+    const pwd = prompt('Para eliminar esta categoría, ingresa la contraseña de administrador:');
+    if (pwd !== 'AndresCollazos96') {
+        if (pwd !== null) alert('Contraseña incorrecta.');
+        return;
+    }
+    
+    const { error } = await _supabase.from('umamii_categories').delete().eq('id', id);
+    if (error) {
+        alert('Error al eliminar: ' + error.message);
+    } else {
+        await loadCategories();
+        renderCategoryManager();
     }
 }
 
@@ -1093,14 +1193,7 @@ async function openModal(type) {
             <input type="number" id="inc-amount" placeholder="Monto" required>`;
     } else if (type === 'product') {
         document.getElementById('modal-title').innerText = 'Nuevo Producto';
-        const catOptions = [
-            { id: 'hamburguesas', name: 'Hamburguesas' },
-            { id: 'perros',       name: 'Perros' },
-            { id: 'sandwiches',   name: 'Sándwiches' },
-            { id: 'salchipapas',  name: 'Salchipapas' },
-            { id: 'adiciones',    name: 'Adiciones' },
-            { id: 'bebidas',      name: 'Bebidas' },
-        ];
+        const catOptions = _categoriesCache.filter(c => !c.is_hidden);
         fields.innerHTML = `
             <input type="text" id="prod-name" placeholder="Nombre del producto" required>
             <select id="prod-cat" required>

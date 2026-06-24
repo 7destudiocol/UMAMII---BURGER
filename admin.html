@@ -22,6 +22,25 @@
         </div>
     </div>
 
+    <!-- Category Manager Modal -->
+    <div id="category-manager-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header-row">
+                <h2>Gestionar Categorías</h2>
+                <button class="modal-close-x" onclick="closeCategoryManager()">&times;</button>
+            </div>
+            <div class="category-manager-content">
+                <div class="add-category-row" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+                    <input type="text" id="new-category-name" placeholder="Nueva categoría..." style="flex: 1; margin: 0; padding: 0.85rem 1rem;">
+                    <button class="add-btn" onclick="addCategory()" style="margin: 0; padding: 0 1.5rem;">Añadir</button>
+                </div>
+                <div id="categories-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 50vh; overflow-y: auto;">
+                    <p style="text-align: center; color: var(--text-gray);">Cargando categorías...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Dashboard -->
     <div id="admin-dashboard" class="dashboard hidden">
         <!-- Top Bar -->
@@ -331,9 +350,14 @@
                             <p class="subtitle">Administra el catálogo y edita precios</p>
                         </div>
                     </div>
-                    <button class="add-btn" onclick="openModal('product')">
-                        <i class="fas fa-plus"></i> Nuevo Producto
-                    </button>
+                    <div class="header-actions" style="display: flex; gap: 0.5rem;">
+                        <button class="add-btn" onclick="openCategoryManager()" style="background: var(--bg-card); border: 1px solid var(--glass-border); color: white;">
+                            <i class="fas fa-tags"></i> Categorías
+                        </button>
+                        <button class="add-btn" onclick="openModal('product')">
+                            <i class="fas fa-plus"></i> Nuevo Producto
+                        </button>
+                    </div>
                 </header>
 
                 <!-- Visual Catalog -->
